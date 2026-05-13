@@ -1,0 +1,11 @@
+node_modules
+.next
+.env*
+!.env.example
+*.log
+.codex-*
+.codex-logs
+.agents
+.tmp-about.html
+tmp_*.txt
+tmp_payso_logo

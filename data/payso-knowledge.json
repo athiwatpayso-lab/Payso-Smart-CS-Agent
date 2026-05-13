@@ -1,0 +1,371 @@
+[
+  {
+    "id": "home-overview-th",
+    "product": "Payso",
+    "category": "Product Info",
+    "title": "Payso homepage overview",
+    "content": "Payso ทำให้การเชื่อมต่อทุกช่องทางเป็นเรื่องง่าย ยกระดับการจัดการร้านค้าให้ทันสมัย พร้อมลุยไปกับคุณในทุกสถานการณ์ มุ่งสู่ความสำเร็จที่มั่นคง",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["payso", "เพย์โซ", "overview", "ภาพรวม", "payment", "merchant", "ร้านค้า", "online payment", "ระบบชำระเงิน"]
+  },
+  {
+    "id": "home-products-th",
+    "product": "Payso",
+    "category": "Product Info",
+    "title": "Payso product lineup",
+    "content": "e-Payment ระบบรับชำระเงินออนไลน์ เพื่อเว็บไซต์ และแอปพลิเคชัน ครบทุกช่องทางยอดนิยม, Payment Link ลิงก์ชำระเงินผ่านโซเชียลมีเดีย Line, Facebook, Instagram, EDC & POS เครื่องรูดบัตร All-in-One เครื่องเดียว ครบ จบ ทุกฟังก์ชันการใช้งาน, PaySoon บริการชำระเงินออนไลน์ระหว่างธุรกิจกับธุรกิจ (B2B) เพิ่มประสิทธิภาพการจัดการกระแสเงินสด, SureSure บริการตรวจสอบสลิปปลอม มั่นใจในความถูกต้องและความปลอดภัย",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["e-payment", "payment link", "edc", "pos", "payssoon", "suresure", "ผลิตภัณฑ์", "บริการ", "lineup", "สินค้า"]
+  },
+  {
+    "id": "epayment-overview-th",
+    "product": "e-Payment",
+    "category": "Product Info",
+    "title": "e-Payment overview",
+    "content": "ด้วยระบบรับชำระเงินสำหรับเว็บไซต์และแอปพลิเคชันที่ปลอดภัย ยืดหยุ่น เชื่อมต่อได้ง่ายผ่าน API และ Plugin",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["e-payment", "epayment", "รับชำระเงิน", "เว็บไซต์", "แอปพลิเคชัน", "online payment", "product info", "api", "plugin"]
+  },
+  {
+    "id": "epayment-integration-methods-th",
+    "product": "e-Payment",
+    "category": "Integration",
+    "title": "e-Payment integration methods",
+    "content": "นักพัฒนาและเจ้าของธุรกิจสามารถเชื่อมต่อเข้ากับเว็บไซต์หรือแอปพลิเคชันได้อย่างรวดเร็ว รองรับครบทุกรูปแบบ ผ่าน API, Redirect, Non UI, SDK และ Plug-in",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["api", "redirect", "non ui", "sdk", "plugin", "plug-in", "integration", "developer", "เชื่อมต่อระบบ", "นักพัฒนา"]
+  },
+  {
+    "id": "epayment-redirect-th",
+    "product": "e-Payment",
+    "category": "Integration",
+    "title": "e-Payment redirect flow",
+    "content": "Redirect แบบฟอร์มที่ปรับแต่งสไตล์เข้ากับแบรนด์คุณ เปลี่ยนเส้นทางไปยังหน้าเงินชำระเงินของ Payso",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["redirect", "หน้าเงินชำระเงิน", "checkout", "redirect payment", "branded form", "แบรนด์", "integration"]
+  },
+  {
+    "id": "epayment-non-ui-api-th",
+    "product": "e-Payment",
+    "category": "Integration",
+    "title": "e-Payment non-ui API",
+    "content": "Non-ui API ตอบสนองความต้องการเฉพาะของธุรกิจ ออกแบบหน้าชำระเงินตามแบรนด์ของคุณเองได้",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["non-ui api", "non ui api", "custom checkout", "api integration", "ออกแบบหน้าชำระเงิน", "แบรนด์", "developer"]
+  },
+  {
+    "id": "epayment-payment-link-bridge-th",
+    "product": "e-Payment",
+    "category": "Integration",
+    "title": "e-Payment payment-link option",
+    "content": "Payment Link แชร์ลิงก์ผ่านโซเชียลมีเดีย หรือช่องทางอื่นๆ ชำระเงินครั้งเดียวตามแผน หรือจ่ายตามต้องการ",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["payment link", "แชร์ลิงก์", "social media", "one-time payment", "on-demand", "ลิงก์ชำระเงิน"]
+  },
+  {
+    "id": "epayment-sdk-plugin-th",
+    "product": "e-Payment",
+    "category": "Integration",
+    "title": "e-Payment SDK and plugin",
+    "content": "SDK ฝังชุดการชำระเงินไว้ในเว็บไซต์ของคุณ ติดตั้งง่าย Setup ไว ราบรื่นทุกขั้นตอน, Plug-in มี Plug-in รองรับแพลตฟอร์มที่คุณใช้งาน พร้อมใช้งาน ติดตั้งง่าย ไม่ต้อง Coding",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["sdk", "plugin", "plug-in", "ไม่ต้อง coding", "ติดตั้งง่าย", "embed payment", "website integration", "developer"]
+  },
+  {
+    "id": "epayment-mobile-first-th",
+    "product": "e-Payment",
+    "category": "Product Info",
+    "title": "e-Payment mobile-first checkout",
+    "content": "ออกแบบตามมาตรฐาน Mobile-First ช่วยลดอัตราการละทิ้งตะกร้าถึง 20%",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["mobile-first", "checkout", "cart abandonment", "ประสบการณ์ชำระเงิน", "mobile", "ux"]
+  },
+  {
+    "id": "epayment-channels-th",
+    "product": "e-Payment",
+    "category": "Payment Channels",
+    "title": "e-Payment payment channels",
+    "content": "ด้วยการรองรับช่องทางการชำระเงินที่หลากหลาย ทั้งบัตรเครดิต/เดบิต, ผ่อนชำระ, พร้อมเพย์, ทรูมันนี่วอลเล็ท, อาลีเพย์ และ วีแชทเพย์ ช่วยให้คุณเข้าถึงลูกค้าได้ทั่วทุกมุมโลก และตอบสนองต่อพฤติกรรมที่แตกต่างกันของผู้ซื้อได้ตลอดเวลา บัตรเครดิตและบัตรเดบิต: วีซ่า, มาสเตอร์การ์ด, เจซีบี และยูเนี่ยนเพย์ ระบบผ่อนชำระ: เลือกผ่อนได้นาน 3-36 เดือน ผ่านบัตรเครดิตหลายธนาคาร คิวอาร์โค้ด: บริการรับ-โอนเงิน ผ่านคิวอาร์โค้ด อย่างพร้อมเพย์ เพย์นาว สเน็ป อินเตอร์เน็ต / โมบายล์แบงกิ้ง: เลือกจ่ายได้หลายธนาคาร อีวอลเล็ท: รับชำระเงินผ่านอีวอลเล็ท ทรูมันนี่วอลเล็ท, ช้อปปี้เพย์, อาลีเพย์ และ วีแชทเพย์ จ่ายบิล ณ จุดรับชำระ: ลูกค้าสามารถชำระเงิน ณ จุดบริการเคาน์เตอร์ได้ทุกสาขาทั่วประเทศ",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["payment channels", "credit card", "debit card", "installment", "promptpay", "qr code", "mobile banking", "internet banking", "e-wallet", "ทรูมันนี่", "alipay", "wechat", "unionpay", "counter service", "ช่องทางชำระเงิน"]
+  },
+  {
+    "id": "epayment-tokenizer-th",
+    "product": "e-Payment",
+    "category": "Product Info",
+    "title": "e-Payment tokenizer feature",
+    "content": "Tokenizer สร้างประสบการณ์ชำระเงินที่รวดเร็วด้วยระบบ Tokenizer ที่แปลงข้อมูลบัตรเครดิตเป็นรหัส Token ที่ปลอดภัย ช่วยให้ลูกค้าจดจำบัตรได้ โดยไม่ต้องกรอกเลขใหม่ทุกครั้ง และร้านค้าไม่ต้องเก็บข้อมูลบัตรจริง",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["tokenizer", "token", "card token", "บัตรเครดิต", "save card", "one-click", "security feature"]
+  },
+  {
+    "id": "epayment-recurring-th",
+    "product": "e-Payment",
+    "category": "Product Info",
+    "title": "e-Payment recurring feature",
+    "content": "Recurring ระบบตัดเงินอัตโนมัติที่เรียกเก็บจากผู้ซื้อ โดยการตัดเงินจากบัตรเครดิตหรือเดบิตตามที่กำหนด เหมาะสำหรับธุรกิจที่มีซื้อขายต่อเนื่อง ช่วยลดปัญหาการ ได้รับเงินล่าช้า ลดเวลาการทำงานของทีมขาย",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["recurring", "subscription", "auto charge", "ตัดเงินอัตโนมัติ", "billing", "ธุรกิจต่อเนื่อง", "credit card", "debit card"]
+  },
+  {
+    "id": "epayment-security-pci-th",
+    "product": "e-Payment",
+    "category": "Technical Support",
+    "title": "e-Payment PCI DSS security",
+    "content": "ปลอดภัยด้วยมาตรฐาน PCI DSS Version 4.0 ที่กำหนดโดยแบรนด์ระดับโลก (Visa, MasterCard, JCB, Amex, Discover) ช่วยปกป้องข้อมูลบัตรเครดิต ลดความเสี่ยงการฉ้อโกง และลดภาระของร้านค้าในการดูแลระบบ ความปลอดภัยข้อมูล",
+    "sourceUrl": "https://payso.co/th/e-payment",
+    "keywords": ["pci dss", "security", "fraud", "ข้อมูลบัตรเครดิต", "มาตรฐานความปลอดภัย", "visa", "mastercard", "jcb", "amex", "discover"]
+  },
+  {
+    "id": "epayment-security-3ds-th",
+    "product": "e-Payment",
+    "category": "Technical Support",
+    "title": "e-Payment 3D Secure",
+    "content": "รองรับระบบยืนยันตัวตน Verified by VISA (VBV) และ MasterCard SecureCode โดยอัตโนมัติ หลังจากกรอกเลขบัตร ระบบจะร้องขอรหัสผ่าน (OTP) เพื่อยืนยันความเป็นเจ้าของบัตร ช่วยป้องกันการใช้บัตรที่ถูกขโมย โดยไม่กระทบประสบการณ์ใช้งาน",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["3d secure", "vbv", "otp", "verified by visa", "securecode", "security", "ยืนยันตัวตน", "ป้องกันบัตรถูกขโมย"]
+  },
+  {
+    "id": "epayment-security-encryption-th",
+    "product": "e-Payment",
+    "category": "Technical Support",
+    "title": "Payso data encryption",
+    "content": "ปกป้องทุกการเชื่อมต่อระหว่างเว็บไซต์ของคุณ และเซิร์ฟเวอร์ ด้วยการเข้ารหัสข้อมูล SSL (Secure Sockets Layer) 128 Bit มาตรฐานเดียวกับธนาคาร เพื่อป้องกันการโจรกรรมข้อมูลส่วนตัว และข้อมูลบัตรเครดิต ระหว่างการส่งผ่านเครือข่าย",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["ssl", "data encryption", "128 bit", "secure sockets layer", "security", "เข้ารหัสข้อมูล", "server", "website"]
+  },
+  {
+    "id": "payment-link-overview-th",
+    "product": "Payment Link",
+    "category": "Product Info",
+    "title": "Payment Link overview",
+    "content": "ระบบลิงก์ชำระเงินสำหรับร้านค้าออนไลน์ที่ขายผ่านโซเชียลมีเดีย (Line, Facebook, Instagram)ช่วยเปลี่ยนบทสนทนาให้เป็นยอดขายที่รวดเร็ว โดยไม่ต้องยุ่งยากกับการตรวจสอบสลิป",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["payment link", "ลิงก์ชำระเงิน", "social commerce", "line", "facebook", "instagram", "chat commerce", "ตรวจสอบสลิป"]
+  },
+  {
+    "id": "payment-link-benefits-th",
+    "product": "Payment Link",
+    "category": "Product Info",
+    "title": "Payment Link benefits",
+    "content": "แชท - ขาย - จ่าย - จบ ปิดการขายให้ลูกค้ากดจ่ายได้เลย รับเงินทันทีหมดปัญหาลูกค้าโอนผิดยอดและสลิปปลอม ใช้ได้ทันทีไม่ต้องมีเว็บ เหมาะกับร้านค้าโซเชียลทุกขนาด และธุรกิจ Chat Commerce ปิดการขายในแชททันที ลูกค้าจ่ายเงินได้เลยไม่ต้องออกไปโอน จบปัญหาสลิปปลอมและโอนผิด ระบบแจ้งเตือนทุกยอด รับชำระได้ทุกช่องทาง ให้ลูกค้าของคุณจ่ายตามสไตล์ที่เขาชอบ",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["payment link", "no website", "chat commerce", "social seller", "social commerce", "สลิปปลอม", "โอนผิด", "ใช้ได้ทันทีไม่ต้องมีเว็บ", "เหมาะกับร้านค้าแบบไหน"]
+  },
+  {
+    "id": "payment-link-use-cases-th",
+    "product": "Payment Link",
+    "category": "Payment Channels",
+    "title": "Payment Link use cases",
+    "content": "ลูกค้าแต่ละคนไม่เหมือนกัน แต่คุณเข้าถึงได้ทุกคน สร้างลิงก์ใหม่ได้ในไม่กี่วินาที พร้อมส่งและรับเงินทันที ตั้งค่าในแชทบอท แชร์ที่โซเชียลมีเดีย แสดง QR Code แสดงใน LINE Rich Menu แชร์ในไลฟ์สตรีมมิ่ง ส่งทางอีเมลหรือข้อความ",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["chatbot", "social media", "qr code", "line rich menu", "livestream", "email", "sms", "message", "use case", "ช่องทาง"]
+  },
+  {
+    "id": "payment-link-formats-th",
+    "product": "Payment Link",
+    "category": "Integration",
+    "title": "Payment Link formats",
+    "content": "คุณสามารถสร้างลิงก์ได้ถึง 3 รูปแบบ pay.sn/mystore ส่งเป็นชื่อร้านค้าที่ตั้งเอง pay.sn/mystore/500 pay.sn/mystore/500/product",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["pay.sn", "link format", "payment link format", "สร้างลิงก์", "mystore", "url format"]
+  },
+  {
+    "id": "edc-overview-th",
+    "product": "EDC & POS",
+    "category": "Product Info",
+    "title": "EDC overview",
+    "content": "ครอบคลุมทุกธนาคารชั้นนำ โดยไม่ต้องมีอุปกรณ์หลายเครื่องให้วุ่นวาย การขายหน้าร้านหรือออกบูธง่ายขึ้นสามารถพกพาเครื่องเดียวไปได้ทุกที่ เพิ่มความคล่องตัวให้ร้านค้า ติดตั้งง่าย เพิ่มยอดขายได้ทันที",
+    "sourceUrl": "https://payso.co/th/edc",
+    "keywords": ["edc", "pos", "เครื่องรูดบัตร", "หน้าร้าน", "booth", "all-in-one", "portable", "product info"]
+  },
+  {
+    "id": "edc-multi-bank-installment-th",
+    "product": "EDC & POS",
+    "category": "Payment Channels",
+    "title": "EDC multi-bank installment",
+    "content": "ไม่ต้องติดต่อหลายธนาคารให้ยุ่งยาก ไม่ต้องสมัครทีละแห่ง Multi-Bank Installment (IPP on EDC) รับผ่อนชำระผ่านบัตรเครดิตสูงสุด 9 บัตร จาก 6 ธนาคารหลัก ผ่อน 0% ได้นานสูงสุด 36 เดือน",
+    "sourceUrl": "https://payso.co/th/edc",
+    "keywords": ["edc", "installment", "multi-bank installment", "ipp on edc", "ผ่อน 0%", "ผ่อนชำระ", "ธนาคาร", "credit card"]
+  },
+  {
+    "id": "edc-payment-channels-th",
+    "product": "EDC & POS",
+    "category": "Payment Channels",
+    "title": "EDC supported channels",
+    "content": "บัตรเครดิตและบัตรเดบิต: รับบัตรเครดิต/เดบิต ทุกประเภท วีซ่า, มาสเตอร์การ์ด, เจซีบี และยูเนี่ยนเพย์ พร้อมเพย์: การสแกนจ่ายผ่านพร้อมเพย สแกน QR Code เพื่อชำระเงินได้ทันที อีวอลเล็ท: สแกนจ่ายผ่านอีวอลเล็ท หลากหลายเจ้ายอดนิยม ทรูมันนี่วอลเล็ท, อาลีเพย์ และ วีแชทเพย์",
+    "sourceUrl": "https://payso.co/th/edc",
+    "keywords": ["edc", "credit card", "debit card", "promptpay", "qr", "ewallet", "truemoney", "alipay", "wechat", "payment channels", "เครื่องรูดบัตร"]
+  },
+  {
+    "id": "how-to-register-th",
+    "product": "Payso",
+    "category": "Help",
+    "title": "How to register for Payso",
+    "content": "สมัครใช้ Payso เพียง 3 ขั้นตอน 1. คลิกลิงก์เพื่อสมัครใช้งาน คลิกที่ลิงก์ด้านล่างเพื่อไปยังหน้าสมัครใช้งาน https://register.paysolutions.asia/ 2. กรอกข้อมูลรายละเอียดให้ครบถ้วน หากคุณต้องการใช้บริการเครื่องรูดบัตร ให้ทำเครื่องหมายถูก (ติ๊ก ✔) ในช่อง \"ต้องการเพิ่มบริการเครื่องรูดบัตร\" 3. ยืนยันข้อมูลและรอการติดต่อกลับ หลังจากกรอกข้อมูลเสร็จสิ้น ให้กดปุ่ม \"ยืนยันข้อมูล\" ทีมงานจะติดต่อกลับภายใน 1-2 วันทำการ ในระหว่างนี้ สามารถเตรียมเอกสารที่จำเป็นสำหรับการทำสัญญาได้ล่วงหน้า",
+    "sourceUrl": "https://payso.co/th/how-to-register",
+    "keywords": ["สมัครใช้บริการ", "register", "สมัคร", "เปิดร้านค้า", "1-2 วันทำการ", "เอกสาร", "onboarding"]
+  },
+  {
+    "id": "merchant-back-office-documents-th",
+    "product": "Payso",
+    "category": "Merchant Back Office",
+    "title": "Merchant document submission",
+    "content": "หลังจากคุณได้รับการติดต่อจากฝ่ายขาย และได้รับบัญชีเข้าใช้งานแล้ว สามารถยื่นเอกสารด้วยตนเอง ผ่านระบบออนไลน์ของเราได้ที่ ระบบหลังบ้าน Payso หรือผ่านทีมขาย",
+    "sourceUrl": "https://payso.co/th/how-to-register",
+    "keywords": ["merchant back office", "ระบบหลังบ้าน", "control", "controls", "ยื่นเอกสาร", "back office", "merchant portal"]
+  },
+  {
+    "id": "help-system-usage-th",
+    "product": "Payso",
+    "category": "Help",
+    "title": "System usage help",
+    "content": "ร้านค้าสามารถศีกษาวิธีการใช้งานระบบได้ตามคู่มือเเละวิดีโอเเนะนำการใช้งานนี้ หรือติดต่อทีมบริการลูกค้า LINE: @pay.sn E-mail: [email protected] Tel. 02-481-6956",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["คู่มือ", "วิดีโอ", "help", "usage", "guide", "support", "customer service", "@pay.sn"]
+  },
+  {
+    "id": "help-plugin-integration-th",
+    "product": "Payso",
+    "category": "Integration",
+    "title": "Supported website plug-ins",
+    "content": "ระบบชำระเงินออนไลน์ของ Payso รองรับการเชื่อมต่อ Plug in ของ Website สำเร็จรูป ดังต่อไปนี้ Woo Commerce, Magento, Virturemart เเละ Opencart โดยร้านค้าสามารถเข้าดูรายละเอียดของ Plug in เเละ Module ต่างๆ ที่เชื่อมต่อได้ที่เอกสารคู่มือ/API ได้ที่นี่",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["plugin", "woo commerce", "woocommerce", "magento", "virturemart", "virtuemart", "opencart", "module", "api doc", "website integration"]
+  },
+  {
+    "id": "help-merchant-profile-th",
+    "product": "Payso",
+    "category": "Merchant Back Office",
+    "title": "Merchant profile changes",
+    "content": "ร้านค้าสามารถแก้ไขข้อมูลส่วนตัว ที่อยู่และเบอร์โทรศัพท์ติดต่อ อีเมล ของผู้ดูแลร้านค้า ได้ที่ หัวข้อเมนูจัดการข้อมูลร้านค้า โดยข้อมูลประกอบไปด้วย ข้อมูลภาษาไทยและภาษาอังกฤษ รวมถึงข้อมูลเว็บไซต์หรือช่องทางการขายสินค้า ทั้งนี้ ก่อน SUBMIT โปรดตรวจสอบความถูกต้องของข้อมูลอีกครั้ง",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["แก้ไขข้อมูลร้านค้า", "merchant profile", "address", "phone", "email", "ข้อมูลผู้ดูแลร้านค้า", "menu จัดการข้อมูลร้านค้า"]
+  },
+  {
+    "id": "help-installment-zero-percent-th",
+    "product": "Payso",
+    "category": "Pricing Sensitive",
+    "title": "0% installment conditions",
+    "content": "ร้านค้าที่ประสงค์จะใช้บริการเปิดผ่อน 0% โดยร้านค้าเป็นผู้รับภาระดอกเบี้ย สามารถเปิดให้ผ่อนชำระได้ถึง 7 ธนาคาร ได้เเก่ ธนาคารกสิกรไทย ธนาคารกรุงเทพ ธนาคารกรุงไทย ธนาคารไทยพาณิชย์ ธนาคารทหารไทยธนชาต ธนาคารยูโอบี และธนาคารกรุงศรีอยุธยา รวมไปถึงบัตรร่วมของธนาคารได้แก่ กรุงศรีเฟิร์สทช้อยส เซ็นทรัลการ์ด Simple Card และ Tesco Lotus ทั้งนี้ จะใช้บริการได้สำหรับยอดซื้อที่มีมูลค่าตั้งแต่ 3,000 บาทขึ้นไป โดยอัตราดอกเบี้ยอยู่ที่ 0.80% / เดือน และสามารถเลือกจำนวนเดือนในการผ่อนได้ 3 4 6 9 10 และ 36 เดือน *หมายเหตุ เงื่อนไขการให้บริการอาจมีการเปลี่ยนแปลงได้ตามธนาคารผู้ให้บริการ*",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["ผ่อน 0%", "0% installment", "pricing", "interest", "0.80%", "ธนาคาร", "ยอดซื้อ 3000", "pricing sensitive", "installment fee"]
+  },
+  {
+    "id": "help-transaction-status-check-th",
+    "product": "Payso",
+    "category": "Technical Support",
+    "title": "Transaction status check",
+    "content": "ร้านค้าสามารถเข้าไปตรวจสอบได้ที่ระบบจัดการ control.paysolutions.asia คลิกเลือกรายการสั่งซื้อ/ผู้ซื้อทั้งหมด เเล้วเลือกช่วงวันเวลาที่ต้องการตรวจสอบ ก็จะพบสถานะของรายการสั่งซื้อของร้านค้า ในกรณีที่ไม่มีข้อมูลการชำระเงินในระบบ เเต่ผู้ซื้อยืนยันว่าได้มีการชำระเงินมาเเล้ว ร้านค้าต้องขอหลักฐานการชำระเงินเพื่อทีม Customer Support จะดำเนินการตรวจสอบเเละ update สถานะที่ถูกต้องให้ต่อไป",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["paid transaction not found", "รายการไม่ขึ้น", "ตรวจสอบสถานะการชำระเงิน", "payment not found", "slip", "หลักฐานการชำระเงิน", "customer support", "transaction issue"]
+  },
+  {
+    "id": "help-refund-general-th",
+    "product": "Payso",
+    "category": "Refund",
+    "title": "Refund and cancel process",
+    "content": "ร้านค้าสามารถคืนเงินหรือยกเลิกรายการได้ โดยการคืนเงินหรือยกเลิกรายการนั้น ร้านค้าจะต้องมียอดเงินคงเหลือ ไม่น้อยกว่ายอดเงินที่ต้องการขอคืนเงิน และสามารถเลือกที่จะคืนเงินเต็มจำนวนหรือคืนเงินเพียงบางส่วนได้ 1. ให้ใส่หมายเลขคำสั่งซื้อที่ช่อง “Pay Solutions Order No.” และกด “SUBMIT” 2. ระบบจะแสดงรายการทั้งหมดที่สามารถคืนเงินหรือยกเลิกรายการได้ ซึ่งมีเงื่อนไขดังต่อไปนี้ 1.) จะต้องเป็นรายการสั่งซื้อที่เกิดขึ้นภายใน 120 วัน 2.) จะต้องเป็นรายการที่มีสถานะ Completed, Hold หรือ Pending",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["refund", "cancel", "คืนเงิน", "ยกเลิกรายการ", "order no", "120 วัน", "completed", "hold", "pending"]
+  },
+  {
+    "id": "help-refund-card-th",
+    "product": "Payso",
+    "category": "Refund",
+    "title": "Credit card refund handling",
+    "content": "กรณีชำระด้วยบัตรเครดิตหรือเดบิต หากผู้ซื้อจะปฏิเสธ / ยกเลิกการชำระเงินผ่านทางบัตรเครดิต ผู้ที่ชำระเงินด้วยบัตรเครดิตจะต้องติดต่อธนาคารผู้ออกบัตรด้วยตนเองเพื่อเเจ้งรายการที่ต้องการปฏิเสธการชำระเงิน เเล้วธนาคารจะติดต่อมายัง Payso เพื่อเเจ้งกการปฏิเสธ ทั้งนี้ Payso จะไม่สามารถโอนเงินคืนได้เองโดยพลการ ยกเว้นในกรณีที่ผู้ซื้อติดต่อกับทางร้านค้าเองเเละร้านค้าตกลงที่จะคืนเงินให้ โดยเเจ้งยืนยันผ่านอีเมล์มาที่ Payso เมื่อได้รับการยืนยันคืนเงินเเล้ว จึงจะดำเนินการคืนเงินให้ผู้ซื้อได้",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["refund", "credit card", "debit card", "chargeback", "ติดต่อธนาคาร", "ปฏิเสธการชำระเงิน", "คืนเงินบัตร"]
+  },
+  {
+    "id": "help-refund-promptpay-th",
+    "product": "Payso",
+    "category": "Refund",
+    "title": "PromptPay refund handling",
+    "content": "กรณีชำระด้วยพร้อมเพย์ หากผู้ซื้อจะปฏิเสธ / ยกเลิกการชำระเงินที่จ่ายเป็นเงินสดผ่านช่องทางพร้อมเพย์ ผู้ซื้อเเละร้านค้าต้องติดต่อขอคืนเงินรายการที่ต้องการยกเลิกเองโดยตรง เมื่อการขอเเจ้งยกเลิกดำเนินการเเละได้รับการอนุมัติเรียบร้อยเเล้ว ผู้ถือบัตรจะได้รับเงินคืนภายใน 14 - 45 วันทำการ (กรณีบัตรต่างชาติ) - หรือ ภายในรอบบิลถัดไปตามเงื่อนไขที่ธนาคารผู้ออกบัตรกำหนด",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["promptpay refund", "พร้อมเพย์", "คืนเงิน", "14 - 45 วันทำการ", "refund timeline", "pricing sensitive", "ยกเลิกการชำระเงิน"]
+  },
+  {
+    "id": "help-settlement-rounds-th",
+    "product": "Payso",
+    "category": "Merchant Back Office",
+    "title": "Settlement transfer rounds",
+    "content": "ระบบชำระเงินออนไลน์ Payso มีการให้บริการรอบการโอนเงินคืน เเเบบ รายวัน ราย 2 วัน ราย 7 วัน ราย 15 วัน เเละรายเดือน โดยร้านค้าเเต่ละร้านจะมีสัญญาเเละเงื่อนไขในการคืนเงินที่เเตกต่างกัน โดยต้องอ้างอิงกับข้อตกลงในเอกสารสัญญาเปิดใช้บริการ ทั้งนี้ ร้านค้าสามารถดูได้ว่าการสรุปเเละรอบคืนเงินเป็นอย่างไร ได้ที่ระบบจัดการ control.paysolutions.asia โดยคลิกเลือกที่เมนู Transfer Money",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["settlement", "transfer money", "รอบโอนเงิน", "รายวัน", "ราย 2 วัน", "ราย 7 วัน", "ราย 15 วัน", "รายเดือน", "merchant back office"]
+  },
+  {
+    "id": "help-no-website-th",
+    "product": "Payso",
+    "category": "Help",
+    "title": "Applying without website or social media",
+    "content": "ในกรณีร้านค้าสนใจใช้บริการระบบชำระเงินออนไลน์เเต่ยังไม่มีเว็บไซต์เเละไม่มีบัญชีโซเชียลมีเดีย โปรดส่งข้อมูลหลักฐานสถานะปัจจุบันของร้านค้า เช่น ประเภทธุรกิจ สถานที่ตั้ง เเผนที่ เเหล่งที่มารายได้ ภาพการออกงานเเสดงสินค้าหรือเอกสารหลักฐานประกอบอื่นๆ ทั้งนี้ ทาง Payso ขอสงวนสิทธิ์ในการพิจารณาเป็นกรณีไป",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["ไม่มีเว็บไซต์", "ไม่มีโซเชียลมีเดีย", "apply without website", "social media", "proof of business", "สมัครใช้บริการ"]
+  },
+  {
+    "id": "help-void-refund-conditions-th",
+    "product": "Payso",
+    "category": "Refund",
+    "title": "Void and refund conditions",
+    "content": "การยกเลิกรายการภายในวัน (Void) หมายถึง การยกเลิกการทำธุรกรรมโดยสมบูรณ์ ตั้งแต่รอบเวลา 00:01 น. ถึง 19:30 น. ในวันที่ทำรายการ ซึ่งผู้ทำรายการจะได้รับเงินคืนเต็มจำนวน สำหรับการกดยกเลิกธุรกรรมที่เกิดขึ้น ผู้ซื้อจะได้รับเงินคืนภายใน 20.00 น. ของวันที่ทำรายการ โดยไม่มีการคิดค่าธรรมเนียม การยกเลิกรายการในวันถัดไป (Refund) หมายถึง การยกเลิกรายการสั่งซื้อหลังจากเวลา 19:30 น. ของแต่ละวัน ทางบริษัทฯ จะหักค่าธรรมเนียมของร้านค้า และ/หรือ ดอกเบี้ยที่ต้องชำระตามเงื่อนไขแต่ละธนาคาร และผู้ซื้อจะได้รับเงินคืนภายใน 15-30 วัน หรือขึ้นอยู่กับธนาคารผู้ออกบัตรเป็นผู้กำหนด ทั้งนี้ หากการยกเลิก เป็นรายการสั่งซื้อสินค้าที่เกินระยะเวลา 7 วันขึ้นไป จะดำเนินการหักค่าบริการเพิ่มเติมจำนวน 300 บาทต่อรายการทุกกรณี",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["void", "refund", "ภายในวัน", "วันถัดไป", "19:30", "20:00", "15-30 วัน", "300 บาท", "refund fee"]
+  },
+  {
+    "id": "help-status-codes-th",
+    "product": "Payso",
+    "category": "Technical Support",
+    "title": "Back office status codes",
+    "content": "Card Type & Gateway: V Visa Card, M Master Card, J JCB Card, C China Union Pay Card (CUP), A American Express Card, B Bill Counter, D Internet Banking, PP PromptPay, WE WeChatPay, AL AliPay. STATUS Description: CP Completed รายการสั่งซื้อ \"อนุมัติ\", NS Not Submit ลูกค้าของคุณยังไม่ได้กรอกข้อมูลบัตรเครดิต, RE Rejected รายการสั่งซื้อ \"ไม่อนุมัติ\", RF Refund รายการที่ \"คืนเงิน\" เรียบร้อย, RR Request Refund รายการที่ทำเรื่องขอ \"คืนเงิน\", TC Test Complete รายการทดสอบที่ \"อนุมัติ\" (ใช้บัตรทดสอบทำรายการ ไม่ใช่การชำระเงินจริง), VC VBV Checking รายการที่อยู่ในระหว่าง \"ตรวจสอบ VBV\", VO Voided รายการที่ \"คืนเงิน\" เรียบร้อย, VR VBV Rejected รายการสั่งซื้อ \"ไม่อนุมัติ\" เนื่องจากกรอกรหัส VBV ไม่ผ่าน, N Not Submit (Unpaid) ลูกค้าไม่ชำระเงิน, C Cancel รายการสั่งซื้อถูกยกเลิก, HO Hold รายการสั่งซื้อถูก \"ยึดหน่วง\" ยอดการชำระเงินเอาไว้ เนื่องจากรายการสั่งซื้อดังกล่าว อาจมีปัญหาจากการถูกปฏิเสธการชำระเงินได้ในภายหลัง",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["status", "cp", "re", "rf", "rr", "tc", "vc", "vo", "vr", "hold", "completed", "rejected", "refund", "vbv", "promptpay", "gateway"]
+  },
+  {
+    "id": "contact-sales-th",
+    "product": "Payso",
+    "category": "Contact",
+    "title": "Sales contact",
+    "content": "ทีมขาย 02-481-6956 LINE @payso [email protected]",
+    "sourceUrl": "https://payso.co/th/contact",
+    "keywords": ["contact", "sales", "ติดต่อ", "ทีมขาย", "line", "@payso", "02-481-6956", "email"]
+  },
+  {
+    "id": "contact-support-th",
+    "product": "Payso",
+    "category": "Human Handover",
+    "title": "Customer support contact",
+    "content": "ทีมบริการลูกค้า 02-481-6956 ต่อ 4 LINE @payso [email protected]",
+    "sourceUrl": "https://payso.co/th/contact",
+    "keywords": ["support", "customer support", "เจ้าหน้าที่", "ทีมบริการลูกค้า", "handover", "contact", "02-481-6956 ต่อ 4", "support@payso.co"]
+  },
+  {
+    "id": "contact-company-address-th",
+    "product": "Payso",
+    "category": "Contact",
+    "title": "Company address",
+    "content": "บริษัท เพย์ โซลูชั่น จำกัด เลขที่ 90 อาคารซีดับเบิ้ลยู ทาวเวอร์ อาคารบี ชั้น 25 ยูนิต B2502 ถ.รัชดาภิเษก แขวงห้วยขวาง เขตห้วยขวาง กรุงเทพมหานคร 10310 เลขประจำตัวผู้เสียภาษีอากร: 0105556096537",
+    "sourceUrl": "https://payso.co/th/contact",
+    "keywords": ["address", "company", "tax id", "contact", "สำนักงานใหญ่", "เลขประจำตัวผู้เสียภาษี", "กรุงเทพมหานคร"]
+  },
+  {
+    "id": "pricing-calculator-notes-th",
+    "product": "Payso",
+    "category": "Pricing Sensitive",
+    "title": "Payment fee calculator notes",
+    "content": "กรณีผ่อนชำระจะมีอัตราดอกเบี้ยธนาคารร้อยละ 0.8 ต่อเดือน (อัตราดอกเบี้ยอาจมีการเปลี่ยนแปลงตามข้อตกลงระหว่างสัญญา) หมายเหตุ ค่าธรรมเนียมการโอนเงิน 12 - 20 บาท (ยอดโอนไม่เกิน 2,000,000 บาท/ครั้ง) ค่าธรรมเนียมคืนเงิน 300 บาท/รายการ (หากรายการชำระเงินนั้นเกิน 7 วัน) เพย์โซ จะสรุปยอดรายได้ของร้านค้าในแต่ละเดือน และโอนยอดรายได้ดังกล่าวหลังจากหักค่าธรรมเนียมแล้วให้กับร้านค้าทุกๆ วันพุธของสัปดาห์ถัดไป โดยนำฝากเข้าบัญชีธนาคารที่ร้านค้าแจ้งมา แต่หากทุกๆ วันพุธของสัปดาห์ถัดไปตรงกับวันหยุดทำการของเพย์โซ หรือธนาคาร ยอดรายได้จะถูกนำฝากเข้าบัญชีของร้านค้าในวันทำการถัดไป",
+    "sourceUrl": "https://payso.co/th/payment-fee-calculator",
+    "keywords": ["fee calculator", "ค่าธรรมเนียม", "interest", "0.8%", "transfer fee", "refund fee", "300 บาท", "วันพุธ", "pricing", "pricing sensitive"]
+  },
+  {
+    "id": "api-docs-overview-en",
+    "product": "API / Developer",
+    "category": "Integration",
+    "title": "Pay Solutions API overview",
+    "content": "Pay Solutions - Online Payment Service. Find a guide to integrate Pay Solutions payments APIs. Easy to Use. Security. Reliability.",
+    "sourceUrl": "https://api-docs.payso.co/docs/api/overviews",
+    "keywords": ["api", "developer", "documents", "plugins", "modules", "integration guide", "api overview", "pay solutions"]
+  }
+]
