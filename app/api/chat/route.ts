@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import {
   createHandoverCase,
-  ensureConversation,
   getConversationStatus,
   listConversationMessages,
   saveChatMessage,
   saveQuestionEnrichmentCandidate,
 } from "@/lib/chat-store";
+import { resolveConversationId } from "@/lib/chat";
 import {
   SAFE_FALLBACK_EN,
   SAFE_FALLBACK_TH,
@@ -451,7 +451,7 @@ export async function POST(request: Request) {
     }
 
     const language = detectLanguage(message);
-    const conversationId = await ensureConversation({
+    const conversationId = await resolveConversationId({
       conversationId: body.conversationId,
       language,
     });
@@ -483,7 +483,10 @@ export async function POST(request: Request) {
         }),
     });
 
-    if (conversationStatus === "handover") {
+    const isAdminTakeoverActive =
+      conversationStatus === "handover" || String(conversationStatus) === "admin_takeover";
+
+    if (isAdminTakeoverActive) {
       const takeoverAnswer =
         language === "th"
           ? "ขณะนี้แอดมินกำลังรับช่วงดูแลบทสนทนานี้อยู่ครับ ข้อความล่าสุดของคุณถูกส่งต่อให้ทีมงานแล้ว"

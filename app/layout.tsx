@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
-
-const notoSansThai = Noto_Sans_Thai({
-  subsets: ["thai", "latin"],
-  variable: "--font-noto-sans-thai",
-});
 
 export const metadata: Metadata = {
   title: "Payso Smart CS Agent",
@@ -19,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${notoSansThai.variable} font-sans antialiased`}>{children}</body>
+      <body className="font-sans antialiased">{children}</body>
     </html>
   );
 }
