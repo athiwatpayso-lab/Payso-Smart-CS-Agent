@@ -1,0 +1,102 @@
+[
+  {
+    "category": "Product",
+    "question": "Payment Link คืออะไร?",
+    "answer": "Payment Link คือระบบสร้างลิงก์รับชำระเงินสำหรับส่งให้ลูกค้าชำระเงินผ่านช่องทางออนไลน์"
+  },
+  {
+    "category": "FAQ",
+    "question": "Payso รองรับช่องทางชำระเงินอะไรบ้าง?",
+    "answer": "Payso รองรับหลายช่องทาง เช่น บัตรเครดิต/เดบิต, QR Code, Mobile Banking และ E-Wallet ตามข้อมูลบริการที่ Payso ระบุ"
+  },
+  {
+    "id": "payso-001",
+    "product": "e-Payment",
+    "category": "Product Information",
+    "title": "ระบบ e-Payment สำหรับเว็บไซต์และแอปพลิเคชัน",
+    "content": "ระบบรับชำระเงินออนไลน์ที่รองรับทุกช่องทางยอดนิยม เช่น บัตรเครดิต/เดบิต, ระบบผ่อนชำระ, คิวอาร์โค้ด, อินเตอร์เน็ต/โมบายล์แบงกิ้ง, อีวอลเล็ท และการจ่ายบิล ณ จุดรับชำระ ออกแบบมาเพื่อเว็บไซต์และแอปพลิเคชันโดยเฉพาะ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["e-payment", "payment gateway", "รับชำระเงินออนไลน์", "บัตรเครดิต"]
+  },
+  {
+    "id": "payso-002",
+    "product": "Payment Link",
+    "category": "Product Information",
+    "title": "Payment Link สำหรับขายผ่านโซเชียลมีเดีย",
+    "content": "บริการสร้างลิงก์ชำระเงินที่ง่ายและรวดเร็ว เหมาะสำหรับการปิดการขายผ่านช่องทางโซเชียลมีเดีย เช่น Line, Facebook และ Instagram ช่วยให้ลูกค้าชำระเงินได้ทันทีโดยไม่ต้องสลับแอปพลิเคชัน",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["payment link", "ลิงก์ชำระเงิน", "ขายของออนไลน์", "social commerce"]
+  },
+  {
+    "id": "payso-003",
+    "product": "EDC & POS",
+    "category": "Product Information",
+    "title": "เครื่องรูดบัตร EDC & POS แบบ All-in-One",
+    "content": "เครื่องรับชำระเงินหน้าร้านที่รวมทุกฟังก์ชันไว้ในเครื่องเดียว รองรับการรูดบัตรและสแกนจ่าย ช่วยให้การจัดการหน้าร้านเป็นเรื่องง่ายและทันสมัย",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["EDC", "เครื่องรูดบัตร", "POS", "ชำระเงินหน้าร้าน"]
+  },
+  {
+    "id": "payso-004",
+    "product": "PaySoon",
+    "category": "Product Information",
+    "title": "PaySoon บริการชำระเงินระหว่างธุรกิจ (B2B)",
+    "content": "บริการชำระเงินออนไลน์ที่เน้นธุรกรรมระหว่างธุรกิจกับธุรกิจ (B2B) เพื่อเพิ่มประสิทธิภาพในการบริหารจัดการกระแสเงินสดและลดขั้นตอนการทำงานที่ซับซ้อน",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["PaySoon", "B2B payment", "จัดการกระแสเงินสด", "ชำระเงินธุรกิจ"]
+  },
+  {
+    "id": "payso-005",
+    "product": "SureSure",
+    "category": "Product Information",
+    "title": "SureSure บริการตรวจสอบสลิปปลอม",
+    "content": "ระบบตรวจสอบความถูกต้องของสลิปการโอนเงินอัตโนมัติ ช่วยป้องกันมิจฉาชีพและเพิ่มความมั่นใจในความถูกต้องและความปลอดภัยของทุกยอดเงินที่ได้รับ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["SureSure", "ตรวจสอบสลิป", "สลิปปลอม", "ความปลอดภัย"]
+  },
+  {
+    "id": "payso-006",
+    "product": "General",
+    "category": "Pricing",
+    "title": "โครงสร้างค่าธรรมเนียมและนโยบายราคา",
+    "content": "ร้านค้าสามารถสมัครเริ่มต้นใช้งานได้ฟรี สำหรับค่าธรรมเนียมการทำรายการสามารถตรวจสอบได้ผ่านเมนู 'คำนวณค่าธรรมเนียม' บนหน้าเว็บไซต์ ทั้งนี้บริษัทไม่มีนโยบายมอบส่วนลดค่าธรรมเนียม 5% ในโครงสร้างราคาปกติ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ค่าธรรมเนียม", "สมัครฟรี", "ส่วนลด", "คำนวณรายได้"]
+  },
+  {
+    "id": "payso-007",
+    "product": "General",
+    "category": "Security",
+    "title": "มาตรฐานความปลอดภัยและความน่าเชื่อถือ",
+    "content": "Payso ดำเนินงานภายใต้การกำกับดูแลของธนาคารแห่งประเทศไทย และได้รับใบอนุญาตประกอบธุรกิจชำระเงินอิเล็กทรอนิกส์อย่างถูกต้อง มั่นใจได้ในมาตรฐานความปลอดภัยระดับ Fintech",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ความปลอดภัย", "ธนาคารแห่งประเทศไทย", "ใบอนุญาต", "Fintech"]
+  },
+  {
+    "id": "payso-008",
+    "product": "General",
+    "category": "Back-office",
+    "title": "ระบบหลังบ้านและฟีเจอร์การจัดการ",
+    "content": "ระบบบริหารจัดการที่แสดงข้อมูลแบบเรียลไทม์ 24 ชั่วโมง ครอบคลุมการดูรายงานยอดขาย กราฟรายรับ การจัดการรายการและการคืนเงิน (Refund) รวมถึงการออกใบกำกับภาษี",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ระบบหลังบ้าน", "dashboard", "รายงานยอดขาย", "การคืนเงิน", "refund"]
+  },
+  {
+    "id": "payso-009",
+    "product": "General",
+    "category": "Technical",
+    "title": "การเชื่อมต่อสำหรับนักพัฒนา (API & Plugins)",
+    "content": "รองรับการเชื่อมต่อผ่าน API ที่มี Documentation ครอบคลุม และมี Plugins & Modules สำเร็จรูปสำหรับแพลตฟอร์ม Shopping Cart ชั้นนำ เพื่อช่วยลดเวลาในการพัฒนาและติดตั้งระบบ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["API", "developer", "documentation", "plugins", "shopping cart"]
+  },
+  {
+    "id": "payso-010",
+    "product": "General",
+    "category": "Contact",
+    "title": "ข้อมูลการติดต่อและที่ตั้งสำนักงาน",
+    "content": "อาคารซีดับเบิ้ลยู ทาวเวอร์ ชั้น 25 ถ.รัชดาภิเษก ห้วยขวาง กรุงเทพฯ โทร: 02-481-6956 อีเมล: sales@payso.co LINE: @payso",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ติดต่อเรา", "เบอร์โทร", "ที่อยู่", "line", "support"]
+  }
+]
