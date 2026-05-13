@@ -380,7 +380,12 @@ async function logChatToSupabase(params: {
   const optionalColumns = await getChatLogOptionalColumns();
 
   if (optionalColumns.has("conversation_id")) {
-    insertPayload.conversation_id = params.conversationId ?? null;
+    if (!params.conversationId) {
+      console.error("Skipping chat_logs insert because conversation_id could not be resolved.");
+      return;
+    }
+
+    insertPayload.conversation_id = params.conversationId;
   }
 
   if (optionalColumns.has("intent")) {
