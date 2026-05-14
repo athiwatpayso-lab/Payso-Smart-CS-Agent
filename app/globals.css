@@ -4,7 +4,7 @@
 
 :root {
   color-scheme: light;
-  --font-sans: Arial, Tahoma, "Noto Sans Thai", sans-serif;
+  --font-sans: "Aktiv Grotesk Thai", "Noto Sans Thai", Arial, Tahoma, sans-serif;
   --payso-blue: #1551f5;
   --payso-blue-dark: #102bb1;
   --payso-blue-light: #c3cefc;

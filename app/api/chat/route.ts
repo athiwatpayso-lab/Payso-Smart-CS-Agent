@@ -8,6 +8,14 @@ import {
 } from "@/lib/chat-store";
 import { resolveConversationId } from "@/lib/chat";
 import {
+  createQuestionHash,
+  getCachedAnswerByHash,
+  incrementCachedAnswerHit,
+  isPrivateOrUserSpecificQuestion,
+  normalizeQuestionForCache,
+  saveAnswerCacheEntry,
+} from "@/lib/answer-cache";
+import {
   SAFE_FALLBACK_EN,
   SAFE_FALLBACK_TH,
   preAnswerGuardrail,
@@ -49,6 +57,16 @@ type ChatHistoryResponse = {
 type SourceReference = {
   title: string;
   url: string;
+};
+
+const PAYSO_WEBSITE_LINK: SourceReference = {
+  title: "Payso Website",
+  url: "https://payso.co/th",
+};
+
+const CONTACT_PAYSO_LINK: SourceReference = {
+  title: "Contact Payso",
+  url: "https://payso.co/th/contact",
 };
 
 const SOURCE_TITLES: Record<string, string> = {
@@ -121,6 +139,14 @@ function normalizeQuestionForStorage(text: string): string {
   return compact || normalizeText(text);
 }
 
+function isFallbackAnswer(answer: string, language: "th" | "en", retrievalResult: RetrievalResult): boolean {
+  return (
+    answer === SAFE_FALLBACK_TH ||
+    answer === SAFE_FALLBACK_EN ||
+    answer === buildKnowledgeFallback(language, retrievalResult)
+  );
+}
+
 function matchesAny(text: string, terms: string[]): boolean {
   const normalized = normalizeText(text);
   return terms.some((term) => {
@@ -142,7 +168,15 @@ function isSmallTalk(message: string): boolean {
   );
 }
 
-function isPaysoRelated(message: string, retrievalResult: RetrievalResult): boolean {
+function isPaysoRelated(
+  message: string,
+  retrievalResult: RetrievalResult,
+  intent?: string,
+): boolean {
+  if (intent === "Payment Issue" || intent === "Technical Issue" || intent === "Human Handover") {
+    return true;
+  }
+
   if (matchesAny(message, PAYSO_SIGNALS)) {
     return true;
   }
@@ -184,6 +218,130 @@ function buildKnowledgeFallback(language: "th" | "en", retrievalResult: Retrieva
   }
 
   return snippets.join("\n\n");
+}
+
+function buildPaymentIssueAnswer(language: "th" | "en"): string {
+  if (language === "th") {
+    return [
+      "ขออภัยครับ 🙏",
+      "รบกวนแจ้งเพิ่มเติมได้ไหมครับ:",
+      "- ชำระผ่าน QR หรือ Payment Link",
+      "- ขึ้นข้อความอะไร",
+      "- ทำรายการช่วงเวลาไหน",
+      "- มีสลิปหรือภาพหน้าจอไหมครับ",
+      "",
+      "เดี๋ยวผมช่วยตรวจสอบให้ครับ",
+    ].join("\n");
+  }
+
+  return [
+    "Sorry about that.",
+    "Could you please share a few details:",
+    "- Was it QR or Payment Link",
+    "- What error message appeared",
+    "- What time the transaction was attempted",
+    "- Any slip or screenshot if available",
+    "",
+    "I’ll help you check it.",
+  ].join("\n");
+}
+
+function buildTechnicalIssueAnswer(language: "th" | "en"): string {
+  if (language === "th") {
+    return [
+      "ขออภัยครับ 🙏",
+      "รบกวนแจ้งรายละเอียดเพิ่มเติมได้ไหมครับ:",
+      "- ใช้งานผ่าน API, webhook หรือหน้า dashboard",
+      "- ขึ้นข้อความ error อะไร",
+      "- พบปัญหาช่วงเวลาไหน",
+      "- มีภาพหน้าจอหรือ request/response ที่เกี่ยวข้องไหมครับ",
+      "",
+      "เดี๋ยวผมช่วยไล่เช็กให้ครับ",
+    ].join("\n");
+  }
+
+  return [
+    "Sorry about that.",
+    "Could you please share a bit more detail:",
+    "- Was this on API, webhook, or dashboard",
+    "- What error message appeared",
+    "- What time it happened",
+    "- Any screenshot or related request/response if available",
+    "",
+    "I’ll help you check it.",
+  ].join("\n");
+}
+
+function buildHandoverAnswer(language: "th" | "en"): string {
+  if (language === "th") {
+    return [
+      "ขออภัยในความไม่สะดวกครับ 🙏",
+      "",
+      "รบกวนส่งข้อมูลต่อไปนี้เพื่อให้ทีมช่วยตรวจสอบได้เร็วขึ้น:",
+      "- เวลาที่ทำรายการ",
+      "- จำนวนเงิน",
+      "- ช่องทางชำระ",
+      "- สลิปหรือเลขอ้างอิงถ้ามี",
+      "",
+      "หากต้องการ ผมช่วยส่งต่อให้เจ้าหน้าที่ตรวจสอบต่อได้ครับ",
+    ].join("\n");
+  }
+
+  return [
+    "Sorry for the inconvenience.",
+    "",
+    "Please share the following so the team can investigate faster:",
+    "- Transaction time",
+    "- Amount",
+    "- Payment channel",
+    "- Slip or reference number if available",
+    "",
+    "If you want, I can help pass this to staff for further review.",
+  ].join("\n");
+}
+
+function needsContactLink(message: string, intent: string, handover: boolean): boolean {
+  if (handover || intent === "Human Handover") {
+    return true;
+  }
+
+  return matchesAny(message, [
+    "contact",
+    "staff",
+    "admin",
+    "handover",
+    "ติดต่อ",
+    "เจ้าหน้าที่",
+    "แอดมิน",
+    "คุยกับแอดมิน",
+    "ส่งต่อ",
+  ]);
+}
+
+function buildRelatedLink(params: {
+  message: string;
+  intent: string;
+  handover: boolean;
+  paysoRelated: boolean;
+}): SourceReference[] {
+  if (!params.paysoRelated) {
+    return [];
+  }
+
+  if (needsContactLink(params.message, params.intent, params.handover)) {
+    return [CONTACT_PAYSO_LINK];
+  }
+
+  if (
+    params.intent === "Product Info" ||
+    params.intent === "Integration" ||
+    params.intent === "Payment Issue" ||
+    params.intent === "Technical Issue"
+  ) {
+    return [PAYSO_WEBSITE_LINK];
+  }
+
+  return [];
 }
 
 function buildGreetingAnswer(language: "th" | "en"): string {
@@ -472,7 +630,10 @@ export async function POST(request: Request) {
 
     const intentResult = classifyIntent(message);
     const retrievalResult = await retrieveKnowledge(message);
-    const paysoRelated = isPaysoRelated(message, retrievalResult);
+    const paysoRelated = isPaysoRelated(message, retrievalResult, intentResult.intent);
+    const normalizedQuestion = normalizeQuestionForCache(message);
+    const questionHash = createQuestionHash(normalizedQuestion);
+    const canUseAnswerCache = paysoRelated && !isPrivateOrUserSpecificQuestion(message);
 
     await saveQuestionEnrichmentCandidate({
       originalQuestion: message,
@@ -542,6 +703,25 @@ export async function POST(request: Request) {
       confidence = "High";
       reason = "Handled as a lightweight conversational message.";
       suggestions = buildSuggestions({ language, answerType: isGreeting(message) ? "greeting" : "smalltalk" });
+    } else if (intentResult.intent === "Payment Issue") {
+      answer = buildPaymentIssueAnswer(language);
+      intent = "Payment Issue";
+      confidence = "High";
+      reason = "Handled as a payment issue with a concise troubleshooting reply.";
+      suggestions = buildSuggestions({ language, answerType: "handover" });
+    } else if (intentResult.intent === "Technical Issue" && retrievalResult.items.length === 0) {
+      answer = buildTechnicalIssueAnswer(language);
+      intent = "Technical Issue";
+      confidence = "High";
+      reason = "Handled as a technical issue with a concise troubleshooting reply.";
+      suggestions = buildSuggestions({ language, answerType: "handover" });
+    } else if (intentResult.intent === "Human Handover") {
+      answer = buildHandoverAnswer(language);
+      intent = "Human Handover";
+      confidence = "High";
+      handover = true;
+      reason = "Handled as a case that needs staff review.";
+      suggestions = buildSuggestions({ language, answerType: "handover" });
     } else if (!paysoRelated) {
       answer = (await generateGeneralAnswer(message, language)) ?? buildGenericFallback(language);
       intent = "General";
@@ -564,6 +744,17 @@ export async function POST(request: Request) {
         sources = buildSources(retrievalResult.items);
         suggestions = buildSuggestions({ language, answerType: handover ? "handover" : "payso", retrievalResult });
       } else {
+        const cachedAnswer = canUseAnswerCache ? await getCachedAnswerByHash(questionHash) : null;
+
+        if (cachedAnswer) {
+          answer = cachedAnswer.answer;
+          reason = "Answered from cached Payso response.";
+
+          void incrementCachedAnswerHit({
+            id: cachedAnswer.id,
+            hitCount: cachedAnswer.hit_count ?? 0,
+          });
+        } else {
         const llmAnswer =
           retrievalResult.items.length > 0
             ? await generateLLMAnswer({
@@ -578,7 +769,8 @@ export async function POST(request: Request) {
               })
             : null;
 
-        answer = llmAnswer ?? buildKnowledgeFallback(language, retrievalResult);
+          answer = llmAnswer ?? buildKnowledgeFallback(language, retrievalResult);
+        }
 
         const finalGuardrail = validateFinalAnswer({
           question: message,
@@ -595,15 +787,23 @@ export async function POST(request: Request) {
         } else {
           handover = intentResult.handoverRequired;
           reason =
-            retrievalResult.items.length > 0
+            reason ||
+            (retrievalResult.items.length > 0
               ? "Answered from retrieved Payso knowledge."
-              : "Answered conservatively because only limited verified Payso context was available.";
+              : "Answered conservatively because only limited verified Payso context was available.");
         }
 
         sources = buildSources(retrievalResult.items);
         suggestions = buildSuggestions({ language, answerType: handover ? "handover" : "payso", retrievalResult });
       }
     }
+
+    sources = buildRelatedLink({
+      message,
+      intent,
+      handover,
+      paysoRelated,
+    });
 
     const assistantMessageId = conversationId
       ? await saveChatMessage({
@@ -635,6 +835,20 @@ export async function POST(request: Request) {
       intent,
       userInfo: body.userInfo,
     });
+
+    if (
+      paysoRelated &&
+      !handover &&
+      canUseAnswerCache &&
+      !isFallbackAnswer(answer, language, retrievalResult)
+    ) {
+      await saveAnswerCacheEntry({
+        normalizedQuestion,
+        questionHash,
+        answer,
+        confidence: 1,
+      });
+    }
 
     if (conversationId && handover) {
       await createHandoverCase({

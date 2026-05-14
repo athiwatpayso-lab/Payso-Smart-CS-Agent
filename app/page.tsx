@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 type Language = "th" | "en";
 type Confidence = "High" | "Medium" | "Low";
@@ -47,6 +47,24 @@ type ChatApiResponse = {
 type ChatHistoryResponse = {
   messages: Message[];
 };
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onend: null | (() => void);
+  onerror: null | ((event: { error?: string }) => void);
+  onresult: null | ((event: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void);
+  start: () => void;
+  stop: () => void;
+};
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => BrowserSpeechRecognition;
+    webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+  }
+}
 
 const USER_PROFILE_STORAGE_KEY = "payso-chat-user-profile";
 const CONVERSATION_STORAGE_KEY = "payso-chat-conversation-id";
@@ -181,6 +199,14 @@ const copy = {
       "พิมพ์คำถามเกี่ยวกับสินค้า Payso เช่น e-Payment, Payment Link, API, หรือปัญหาสถานะการชำระเงิน",
     send: "ส่งคำถาม",
     sending: "กำลังค้นข้อมูลจากแหล่งทางการ...",
+    voiceThai: "TH",
+    voiceEnglish: "EN",
+    voiceTyping: "พิมพ์ด้วยเสียง",
+    voiceReply: "อ่านคำตอบ",
+    listening: "กำลังฟัง...",
+    voiceUnsupported: "เบราว์เซอร์นี้ยังไม่รองรับการพิมพ์ด้วยเสียง แนะนำใช้ Chrome",
+    addFile: "แนบไฟล์",
+    filesReady: "ไฟล์ที่เลือก",
     intentLabel: "เจตนาของคำถาม",
     confidenceLabel: "ระดับความมั่นใจ",
     sourceLabel: "แหล่งอ้างอิง",
@@ -324,6 +350,14 @@ const copy = {
       "Type a question about Payso products such as e-Payment, Payment Link, API, or payment-status issues",
     send: "Send Question",
     sending: "Searching official Payso knowledge...",
+    voiceThai: "TH",
+    voiceEnglish: "EN",
+    voiceTyping: "Voice typing",
+    voiceReply: "Voice reply",
+    listening: "Listening...",
+    voiceUnsupported: "This browser does not support voice typing. Chrome is recommended.",
+    addFile: "Add file",
+    filesReady: "Selected files",
     intentLabel: "Intent",
     confidenceLabel: "Confidence",
     sourceLabel: "Source",
@@ -359,6 +393,11 @@ function createWelcomeMessage(language: Language): Message {
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("th");
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const [voiceLanguage, setVoiceLanguage] = useState<Language>("th");
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceUnsupportedMessage, setVoiceUnsupportedMessage] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [preChatForm, setPreChatForm] = useState<UserProfile>({
     name: "",
@@ -371,8 +410,14 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const t = copy[language];
+
+  function getRecognitionLanguage(nextLanguage: Language): string {
+    return nextLanguage === "th" ? "th-TH" : "en-US";
+  }
 
   useEffect(() => {
     try {
@@ -404,11 +449,25 @@ export default function HomePage() {
   }, [language]);
 
   useEffect(() => {
+    setVoiceLanguage(language);
+  }, [language]);
+
+  useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!conversationId || !userProfile) {
@@ -466,6 +525,7 @@ export default function HomePage() {
     ]);
 
     setInput("");
+    setSelectedFiles([]);
     setIsLoading(true);
 
     try {
@@ -570,6 +630,134 @@ export default function HomePage() {
     }
 
     void sendQuestion(input);
+  }
+
+  function handleMicToggle() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const RecognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!RecognitionConstructor) {
+      setVoiceUnsupportedMessage(t.voiceUnsupported);
+      return;
+    }
+
+    setVoiceUnsupportedMessage(null);
+
+    const recognition = new RecognitionConstructor();
+    recognition.lang = getRecognitionLanguage(voiceLanguage);
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result?.[0]?.transcript || "")
+        .join(" ")
+        .trim();
+
+      if (transcript) {
+        setInput(transcript);
+      }
+    };
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  }
+
+  function handleVoiceReplyToggle() {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    const latestAssistantMessage = [...messages]
+      .reverse()
+      .find((message) => (message.role === "assistant" || message.role === "admin") && message.id !== "welcome");
+
+    if (!latestAssistantMessage) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(latestAssistantMessage.content);
+    const preferredPrefix = voiceLanguage === "th" ? "th" : "en";
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith(preferredPrefix));
+
+    utterance.lang = matchingVoice?.lang || getRecognitionLanguage(voiceLanguage);
+
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+    }
+
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+    };
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+    };
+
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  function handleFileSelect(event: ChangeEvent<HTMLInputElement>) {
+    const nextFiles = Array.from(event.target.files ?? []);
+
+    if (nextFiles.length === 0) {
+      return;
+    }
+
+    setSelectedFiles((current) => {
+      const seen = new Set(current.map((file) => `${file.name}-${file.size}-${file.lastModified}`));
+      const merged = [...current];
+
+      nextFiles.forEach((file) => {
+        const key = `${file.name}-${file.size}-${file.lastModified}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(file);
+        }
+      });
+
+      return merged;
+    });
+
+    event.target.value = "";
+  }
+
+  function removeSelectedFile(targetFile: File) {
+    setSelectedFiles((current) =>
+      current.filter(
+        (file) =>
+          !(
+            file.name === targetFile.name &&
+            file.size === targetFile.size &&
+            file.lastModified === targetFile.lastModified
+          ),
+      ),
+    );
   }
 
   function scrollToSection(sectionId: string) {
@@ -919,6 +1107,9 @@ export default function HomePage() {
                   const isAssistant = message.role === "assistant" || message.role === "admin";
                   const isWelcomeMessage = message.id === "welcome";
                   const isAdmin = message.role === "admin";
+                  const userDisplayName = userProfile?.name?.trim()
+                    ? `${t.user} ${userProfile.name.trim()}`
+                    : t.user;
 
                   return (
                     <div key={message.id} className="space-y-3">
@@ -934,7 +1125,7 @@ export default function HomePage() {
                             isAssistant ? "text-payso-blue" : "text-white/78"
                           } ${isWelcomeMessage ? "text-center" : ""}`}
                         >
-                          {isAdmin ? t.admin : isAssistant ? t.assistant : t.user}
+                          {isAdmin ? t.admin : isAssistant ? t.assistant : userDisplayName}
                         </p>
                         <p
                           className={`mt-2 whitespace-pre-line text-sm leading-7 ${
@@ -1011,24 +1202,138 @@ export default function HomePage() {
               </div>
 
               <form onSubmit={handleSubmit} className="mt-5">
-                <div className="rounded-[26px] border border-payso-blue/10 bg-white p-3 shadow-[0_14px_40px_rgba(16,43,177,0.06)]">
-                  <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
-                    <textarea
-                      value={input}
-                      onChange={(event) => setInput(event.target.value)}
-                      onKeyDown={handleInputKeyDown}
-                      placeholder={t.inputPlaceholder}
-                      rows={3}
-                      className="min-h-[84px] flex-1 resize-none rounded-[18px] bg-payso-soft/70 px-4 py-3 text-sm text-payso-ink outline-none placeholder:text-payso-muted"
+                <div className="flex items-center gap-3">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      onChange={handleFileSelect}
+                      className="hidden"
                     />
                     <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="rounded-[18px] bg-payso-blue px-6 py-4 text-sm font-semibold text-white transition hover:bg-payso-dark disabled:cursor-not-allowed disabled:opacity-70 md:self-stretch"
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-payso-blue/10 bg-white text-payso-dark shadow-[0_12px_28px_rgba(16,43,177,0.08)] transition hover:bg-payso-soft"
+                      aria-label={t.addFile}
                     >
-                      {isLoading ? t.sending : t.send}
+                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                        <path
+                          d="M12 5v14M5 12h14"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
                     </button>
-                  </div>
+
+                    <div className="min-w-0 flex-1 rounded-full border border-payso-blue/10 bg-white px-2 py-2 shadow-[0_18px_40px_rgba(16,43,177,0.08)]">
+                      <div className="flex items-center gap-3">
+                        <div className="min-w-0 flex-1 px-2">
+                          <textarea
+                            value={input}
+                            onChange={(event) => setInput(event.target.value)}
+                            onKeyDown={handleInputKeyDown}
+                            placeholder={t.inputPlaceholder}
+                            rows={1}
+                            className="min-h-[44px] w-full resize-none bg-transparent px-4 py-2 text-sm leading-7 text-payso-ink outline-none placeholder:text-payso-muted"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2 pr-1">
+                          <button
+                            type="button"
+                            onClick={handleMicToggle}
+                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
+                              isListening
+                                ? "bg-payso-soft text-payso-blue"
+                                : "bg-transparent text-payso-blue hover:bg-payso-soft"
+                            }`}
+                            aria-label={t.voiceTyping}
+                          >
+                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+                              <path
+                                d="M12 4a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3Zm-6 7a6 6 0 0 0 12 0m-6 6v3m-4 0h8"
+                                stroke="currentColor"
+                                strokeWidth="1.7"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleVoiceReplyToggle}
+                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
+                              isSpeaking
+                                ? "bg-payso-blue text-white"
+                                : "bg-transparent text-payso-blue hover:bg-payso-soft"
+                            }`}
+                            aria-label={t.voiceReply}
+                          >
+                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
+                              {isSpeaking ? (
+                                <path
+                                  d="M9 9.25A1.25 1.25 0 0 1 10.25 8h3.5A1.25 1.25 0 0 1 15 9.25v5.5A1.25 1.25 0 0 1 13.75 16h-3.5A1.25 1.25 0 0 1 9 14.75v-5.5Z"
+                                  stroke="currentColor"
+                                  strokeWidth="1.7"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              ) : (
+                                <>
+                                  <path
+                                    d="M5 14h2.4l3.6 3V7L7.4 10H5v4Z"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                  />
+                                  <path
+                                    d="M15 10.5a3.5 3.5 0 0 1 0 3"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                  />
+                                  <path
+                                    d="M17.5 8a7 7 0 0 1 0 8"
+                                    stroke="currentColor"
+                                    strokeWidth="1.7"
+                                    strokeLinecap="round"
+                                  />
+                                </>
+                              )}
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+
+                      {selectedFiles.length > 0 ? (
+                        <div className="flex flex-wrap gap-2 px-4 pb-2 pt-1">
+                          {selectedFiles.map((file) => (
+                            <button
+                              key={`${file.name}-${file.size}-${file.lastModified}`}
+                              type="button"
+                              onClick={() => removeSelectedFile(file)}
+                              className="inline-flex items-center gap-2 rounded-full bg-payso-soft px-3 py-1.5 text-xs font-medium text-payso-dark transition hover:bg-[#e8efff]"
+                            >
+                              <span className="max-w-[180px] truncate">{file.name}</span>
+                              <span className="text-payso-muted">x</span>
+                            </button>
+                          ))}
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {(isListening || voiceUnsupportedMessage || isLoading) ? (
+                      <div className="min-h-[24px] px-2 pt-2 text-xs text-payso-muted">
+                        {isListening
+                          ? t.listening
+                          : isLoading
+                            ? t.sending
+                            : voiceUnsupportedMessage ?? ""}
+                      </div>
+                    ) : null}
                 </div>
               </form>
             </div>

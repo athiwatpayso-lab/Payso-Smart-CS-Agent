@@ -32,7 +32,8 @@ export async function generateLLMAnswer(params: {
       },
       body: JSON.stringify({
         model,
-        temperature: 0.1,
+        temperature: 0.2,
+        max_tokens: 300,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

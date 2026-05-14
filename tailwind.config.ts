@@ -23,7 +23,7 @@ const config: Config = {
         glass: "0 28px 60px rgba(16, 43, 177, 0.12)",
       },
       fontFamily: {
-        sans: ["var(--font-noto-sans-thai)", "Noto Sans Thai", "sans-serif"],
+        sans: ["Aktiv Grotesk Thai", "Noto Sans Thai", "Arial", "Tahoma", "sans-serif"],
       },
     },
   },

@@ -1,6 +1,7 @@
 export type Intent =
   | "Product Info"
   | "Integration"
+  | "Payment Issue"
   | "Technical Issue"
   | "Pricing Sensitive"
   | "Human Handover"
@@ -14,7 +15,6 @@ export type IntentResult = {
 
 const PRODUCT_SIGNALS = [
   "คืออะไร",
-  "คือ",
   "เหมาะกับ",
   "รองรับ",
   "ใช้งานอย่างไร",
@@ -28,8 +28,6 @@ const PRODUCT_SIGNALS = [
   "payment link",
   "edc",
   "pos",
-  "paysure",
-  "paysure",
   "paysure",
   "paysoon",
   "suresure",
@@ -52,6 +50,17 @@ const INTEGRATION_SIGNALS = [
   "ติดตั้ง",
 ];
 
+const PAYMENT_SIGNALS = [
+  "ชำระไม่ได้",
+  "จ่ายไม่ได้",
+  "โอนไม่ได้",
+  "สแกนไม่ได้",
+  "qr ใช้ไม่ได้",
+  "ลิงก์จ่ายไม่ได้",
+  "payment failed",
+  "payment error",
+];
+
 const TECHNICAL_SIGNALS = [
   "ไม่ขึ้น",
   "error",
@@ -68,6 +77,8 @@ const TECHNICAL_SIGNALS = [
   "สลิป",
   "hold",
   "rejected",
+  "webhook ไม่เข้า",
+  "api ใช้งานไม่ได้",
 ];
 
 const PRICING_SIGNALS = [
@@ -76,7 +87,7 @@ const PRICING_SIGNALS = [
   "ค่าบริการ",
   "ดอกเบี้ย",
   "ส่วนลด",
-  "โปรโมชัน",
+  "โปรโมชั่น",
   "promotion",
   "promo",
   "discount",
@@ -108,6 +119,7 @@ const HANDOVER_SIGNALS = [
   "frustrated",
   "angry",
   "เจ้าหน้าที่",
+  "แอดมิน",
 ];
 
 const OUT_OF_SCOPE_SIGNALS = [
@@ -150,6 +162,7 @@ export function classifyIntent(question: string): IntentResult {
     !hasAnySignal(normalizedQuestion, [
       ...PRODUCT_SIGNALS,
       ...INTEGRATION_SIGNALS,
+      ...PAYMENT_SIGNALS,
       ...TECHNICAL_SIGNALS,
       ...PRICING_SIGNALS,
       ...HANDOVER_SIGNALS,
@@ -178,11 +191,11 @@ export function classifyIntent(question: string): IntentResult {
     };
   }
 
-  if (hasAnySignal(normalizedQuestion, INTEGRATION_SIGNALS)) {
+  if (hasAnySignal(normalizedQuestion, PAYMENT_SIGNALS)) {
     return {
-      intent: "Integration",
+      intent: "Payment Issue",
       handoverRequired: false,
-      reason: "The question is about API, SDK, plugin, developer workflow, or system integration.",
+      reason: "The question is about a payment that could not be completed successfully.",
     };
   }
 
@@ -191,6 +204,14 @@ export function classifyIntent(question: string): IntentResult {
       intent: "Technical Issue",
       handoverRequired: false,
       reason: "The question is about a usage problem, payment status problem, or technical issue.",
+    };
+  }
+
+  if (hasAnySignal(normalizedQuestion, INTEGRATION_SIGNALS)) {
+    return {
+      intent: "Integration",
+      handoverRequired: false,
+      reason: "The question is about API, SDK, plugin, developer workflow, or system integration.",
     };
   }
 

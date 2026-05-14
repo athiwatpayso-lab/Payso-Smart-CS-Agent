@@ -20,7 +20,7 @@ create table if not exists public.knowledge_chunks (
   content text not null,
   source_url text not null,
   keywords text[] not null default '{}',
-  embedding extensions.vector(1536),
+  embedding vector(1536),
   search_tsv tsvector generated always as (
     to_tsvector(
       'simple',
@@ -74,6 +74,12 @@ create table if not exists public.handover_cases (
   constraint handover_cases_status_check check (status in ('pending', 'in_progress', 'resolved')),
   constraint handover_cases_priority_check check (priority in ('normal', 'high', 'urgent'))
 );
+
+alter table public.knowledge_chunks
+add column if not exists search_tsv tsvector
+generated always as (
+  to_tsvector('simple', coalesce(content, ''))
+) stored;
 
 create index if not exists knowledge_chunks_search_tsv_idx
   on public.knowledge_chunks
@@ -191,12 +197,12 @@ as $$
     keywords,
     ((text_rank * 100.0) + (trigram_rank * 20.0) + (case when keyword_match then 10.0 else 0.0 end))::double precision as base_score
   from candidates
-  order by base_score desc, updated_at desc
+  order by base_score desc
   limit greatest(match_count, 1);
 $$;
 
 create or replace function public.match_knowledge_chunks(
-  query_embedding extensions.vector(1536),
+  query_embedding vector(1536),
   match_count int default 12,
   match_threshold float default 0.2
 )

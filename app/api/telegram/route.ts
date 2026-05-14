@@ -1,4 +1,3 @@
-import { NextResponse } from "next/server";
 import {
   findConversationIdByTelegramReply,
   getConversationStatus,
@@ -50,50 +49,67 @@ async function callTelegramApi(method: string, payload: Record<string, unknown>)
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as TelegramUpdate;
-    const callbackQuery = body.callback_query;
-    const callbackData = callbackQuery?.data?.trim() ?? "";
-
-    if (!callbackQuery?.id || !callbackData.startsWith("takeover:")) {
-      return NextResponse.json({ ok: true });
-    }
-
-    const conversationId = callbackData.slice("takeover:".length).trim();
-    const didMarkTakeover = conversationId
-      ? await markConversationAdminTakeover(conversationId)
-      : false;
-
-    await callTelegramApi("answerCallbackQuery", {
-      callback_query_id: callbackQuery.id,
-      text: didMarkTakeover
-        ? "รับแชทโดยแอดมินเรียบร้อยแล้ว"
-        : "ไม่สามารถรับช่วงแชทนี้ได้",
-      show_alert: false,
+    console.log(JSON.stringify(body, null, 2));
+    console.log("Telegram webhook received", {
+      hasCallbackQuery: Boolean(body.callback_query),
+      hasMessage: Boolean(body.message),
     });
 
-    if (callbackQuery.message?.chat?.id && callbackQuery.message?.message_id) {
-      await callTelegramApi("editMessageReplyMarkup", {
-        chat_id: callbackQuery.message.chat.id,
-        message_id: callbackQuery.message.message_id,
-        reply_markup: {
-          inline_keyboard: [],
-        },
+    const callbackQuery = body.callback_query;
+    const callbackData = callbackQuery?.data?.trim() ?? "";
+    let didMarkTakeover = false;
+    let didSaveAdminReply = false;
+
+    if (callbackQuery?.id && callbackData.startsWith("takeover:")) {
+      const conversationId = callbackData.slice("takeover:".length).trim();
+      didMarkTakeover = conversationId
+        ? await markConversationAdminTakeover(conversationId)
+        : false;
+
+      await callTelegramApi("answerCallbackQuery", {
+        callback_query_id: callbackQuery.id,
+        text: didMarkTakeover
+          ? "รับแชทโดยแอดมินเรียบร้อยแล้ว"
+          : "ไม่สามารถรับช่วงแชทนี้ได้",
+        show_alert: false,
       });
+
+      if (callbackQuery.message?.chat?.id && callbackQuery.message?.message_id) {
+        await callTelegramApi("editMessageReplyMarkup", {
+          chat_id: callbackQuery.message.chat.id,
+          message_id: callbackQuery.message.message_id,
+          reply_markup: {
+            inline_keyboard: [],
+          },
+        });
+      }
     }
 
     const incomingMessage = body.message;
-    const replyToMessageId = incomingMessage?.reply_to_message?.message_id;
     const telegramChatId = incomingMessage?.chat?.id;
+    const repliedMessageId = incomingMessage?.reply_to_message?.message_id;
     const adminText = incomingMessage?.text?.trim();
 
-    if (typeof telegramChatId === "number" && typeof replyToMessageId === "number" && adminText) {
+    if (typeof telegramChatId === "number" && typeof repliedMessageId === "number" && adminText) {
       const conversationId = await findConversationIdByTelegramReply({
         telegramChatId,
-        telegramMessageId: replyToMessageId,
+        telegramMessageId: repliedMessageId,
       });
-      const conversationStatus = await getConversationStatus(conversationId);
 
-      if (conversationId && conversationStatus === "handover") {
-        await saveChatMessage({
+      console.log("Telegram webhook resolved conversation_id", {
+        telegramChatId,
+        repliedMessageId,
+        conversationId,
+      });
+
+      if (conversationId) {
+        const conversationStatus = await getConversationStatus(conversationId);
+
+        if (conversationStatus !== "handover") {
+          await markConversationAdminTakeover(conversationId);
+        }
+
+        const messageId = await saveChatMessage({
           conversationId,
           role: "admin",
           content: adminText,
@@ -103,12 +119,38 @@ export async function POST(request: Request) {
           sources: [],
           reason: "Reply sent by Telegram admin after takeover.",
         });
+
+        didSaveAdminReply = Boolean(messageId);
+        console.log("Telegram webhook admin reply insert", {
+          conversationId,
+          success: didSaveAdminReply,
+        });
+
+        if (!messageId) {
+          console.log("Telegram webhook admin reply insert error", {
+            conversationId,
+            adminText,
+          });
+        }
+      } else {
+        console.log("Telegram webhook admin reply insert", {
+          conversationId: null,
+          success: false,
+        });
+        console.log("Telegram webhook admin reply insert error", {
+          conversationId: null,
+          adminText,
+        });
       }
     }
 
-    return NextResponse.json({ ok: true, adminTakeover: didMarkTakeover });
+    return Response.json({
+      ok: true,
+      adminTakeover: didMarkTakeover,
+      adminReplySaved: didSaveAdminReply,
+    });
   } catch (error) {
     console.error("Telegram callback route failed:", error);
-    return NextResponse.json({ ok: false }, { status: 500 });
+    return Response.json({ ok: false }, { status: 500 });
   }
 }
