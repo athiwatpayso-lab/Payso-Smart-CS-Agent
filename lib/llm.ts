@@ -2,7 +2,7 @@ import type { Intent } from "@/lib/intent-classifier";
 import { buildPaysoPrompt, type PromptContextItem } from "@/lib/prompt";
 
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "qwen/qwen3-next-80b-a3b-instruct:free";
+const DEFAULT_MODEL = "google/gemini-2.5-pro-exp-03-25:free";
 
 export async function generateLLMAnswer(params: {
   question: string;

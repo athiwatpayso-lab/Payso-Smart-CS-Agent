@@ -8,3 +8,5 @@ node_modules
 .tmp-about.html
 tmp_*.txt
 tmp_payso_logo
+
+.claude/settings.local.json

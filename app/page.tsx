@@ -1,7 +1,17 @@
 "use client";
 
 import Image from "next/image";
-import { ChangeEvent, FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
+import {
+  ChangeEvent,
+  Fragment,
+  FormEvent,
+  KeyboardEvent,
+  ReactNode,
+  UIEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 type Language = "th" | "en";
 type Confidence = "High" | "Medium" | "Low";
@@ -42,11 +52,333 @@ type ChatApiResponse = {
   reason: string;
   suggestions?: string[];
   conversationId?: string | null;
+  messageId?: string | null;
 };
 
 type ChatHistoryResponse = {
   messages: Message[];
 };
+
+type ParsedMessageLink = {
+  label: string;
+  url: string;
+};
+
+type MarkdownBlock =
+  | { type: "paragraph"; lines: string[] }
+  | { type: "list"; items: string[] }
+  | { type: "code"; code: string; language?: string };
+
+function parseAssistantMessageContent(content: string): {
+  body: string;
+  links: ParsedMessageLink[];
+  relatedQuestions: string[];
+} {
+  const links: ParsedMessageLink[] = [];
+  const relatedQuestions: string[] = [];
+  const lines = content.split(/\r?\n/);
+  const bodyLines: string[] = [];
+  let section: "body" | "links" | "related" = "body";
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      if (section === "body") {
+        bodyLines.push("");
+      }
+      continue;
+    }
+
+    if (/^ดูเพิ่มเติม:/i.test(line)) {
+      section = "links";
+      continue;
+    }
+
+    if (/^คำถามที่เกี่ยวข้อง:/i.test(line)) {
+      section = "related";
+      continue;
+    }
+
+    if (section === "links") {
+      const match = line.match(/^-?\s*(.+?):\s*(https?:\/\/\S+)$/i);
+
+      if (match) {
+        links.push({
+          label: match[1].trim(),
+          url: match[2].trim(),
+        });
+      }
+
+      continue;
+    }
+
+    if (section === "related") {
+      const match = line.match(/^\d+\.\s*(.+)$/);
+
+      if (match) {
+        relatedQuestions.push(match[1].trim());
+      }
+
+      continue;
+    }
+
+    bodyLines.push(rawLine);
+  }
+
+  return {
+    body: bodyLines.join("\n").replace(/\n{3,}/g, "\n\n").trim(),
+    links,
+    relatedQuestions,
+  };
+}
+
+function normalizeMessageContent(content: string): string {
+  return content.replace(/\s+/g, " ").trim();
+}
+
+function dedupeConsecutiveAssistantMessages(messages: Message[]): Message[] {
+  return messages.reduce<Message[]>((deduped, message) => {
+    const previous = deduped[deduped.length - 1];
+    const isAssistant = message.role === "assistant" || message.role === "admin";
+    const previousIsAssistant = previous?.role === "assistant" || previous?.role === "admin";
+
+    if (
+      previous &&
+      isAssistant &&
+      previousIsAssistant &&
+      normalizeMessageContent(previous.content) === normalizeMessageContent(message.content)
+    ) {
+      const previousSuggestions = previous.meta?.suggestions ?? [];
+      const nextSuggestions = message.meta?.suggestions ?? [];
+
+      deduped[deduped.length - 1] = {
+        ...message,
+        meta: message.meta
+          ? {
+              ...message.meta,
+              suggestions: nextSuggestions.length ? nextSuggestions : previousSuggestions,
+            }
+          : message.meta,
+      };
+
+      return deduped;
+    }
+
+    deduped.push(message);
+    return deduped;
+  }, []);
+}
+
+function renderInlineMarkdown(text: string): ReactNode[] {
+  const nodes: ReactNode[] = [];
+  const pattern = /(\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|(https?:\/\/[^\s)]+)|`([^`]+)`|\*\*([^*]+)\*\*)/g;
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      nodes.push(text.slice(lastIndex, match.index));
+    }
+
+    if (match[2] && match[3]) {
+      nodes.push(
+        <a
+          key={`${match.index}-${match[3]}`}
+          href={match[3]}
+          target="_blank"
+          rel="noreferrer noopener"
+          className="chat-link"
+        >
+          {match[2]}
+        </a>,
+      );
+    } else if (match[4]) {
+      const url = match[4].replace(/[.,!?;:]+$/u, "");
+      const trailing = match[4].slice(url.length);
+      nodes.push(
+        <Fragment key={`${match.index}-${url}`}>
+          <a href={url} target="_blank" rel="noreferrer noopener" className="chat-link">
+            {url}
+          </a>
+          {trailing}
+        </Fragment>,
+      );
+    } else if (match[5]) {
+      nodes.push(
+        <code key={`${match.index}-${match[5]}`} className="chat-inline-code">
+          {match[5]}
+        </code>,
+      );
+    } else if (match[6]) {
+      nodes.push(
+        <strong key={`${match.index}-${match[6]}`} className="font-semibold">
+          {match[6]}
+        </strong>,
+      );
+    }
+
+    lastIndex = pattern.lastIndex;
+  }
+
+  if (lastIndex < text.length) {
+    nodes.push(text.slice(lastIndex));
+  }
+
+  return nodes;
+}
+
+function parseMarkdownBlocks(content: string): MarkdownBlock[] {
+  const blocks: MarkdownBlock[] = [];
+  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  let paragraphLines: string[] = [];
+  let listItems: string[] = [];
+  let codeLines: string[] = [];
+  let codeLanguage = "";
+  let inCode = false;
+
+  function flushParagraph() {
+    if (paragraphLines.length) {
+      blocks.push({ type: "paragraph", lines: paragraphLines });
+      paragraphLines = [];
+    }
+  }
+
+  function flushList() {
+    if (listItems.length) {
+      blocks.push({ type: "list", items: listItems });
+      listItems = [];
+    }
+  }
+
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    const codeFence = line.match(/^```(\w+)?/);
+
+    if (codeFence) {
+      if (inCode) {
+        blocks.push({ type: "code", code: codeLines.join("\n"), language: codeLanguage || undefined });
+        codeLines = [];
+        codeLanguage = "";
+        inCode = false;
+      } else {
+        flushParagraph();
+        flushList();
+        inCode = true;
+        codeLanguage = codeFence[1] ?? "";
+      }
+      continue;
+    }
+
+    if (inCode) {
+      codeLines.push(rawLine);
+      continue;
+    }
+
+    if (!line.trim()) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const listMatch = line.match(/^[-•]\s+(.+)$/) ?? line.match(/^\d+\.\s+(.+)$/);
+
+    if (listMatch) {
+      flushParagraph();
+      listItems.push(listMatch[1]);
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(line);
+  }
+
+  if (inCode) {
+    blocks.push({ type: "code", code: codeLines.join("\n"), language: codeLanguage || undefined });
+  }
+
+  flushParagraph();
+  flushList();
+
+  return blocks;
+}
+
+function ChatMarkdown({ content }: { content: string }) {
+  const blocks = parseMarkdownBlocks(content);
+
+  if (!blocks.length) {
+    return null;
+  }
+
+  return (
+    <div className="chat-markdown">
+      {blocks.map((block, index) => {
+        if (block.type === "code") {
+          return (
+            <pre key={`code-${index}`} className="chat-code-block">
+              {block.language ? <span className="chat-code-label">{block.language}</span> : null}
+              <code>{block.code}</code>
+            </pre>
+          );
+        }
+
+        if (block.type === "list") {
+          return (
+            <ul key={`list-${index}`} className="chat-list">
+              {block.items.map((item, itemIndex) => (
+                <li key={`${index}-${itemIndex}`}>{renderInlineMarkdown(item)}</li>
+              ))}
+            </ul>
+          );
+        }
+
+        return (
+          <p key={`paragraph-${index}`}>
+            {block.lines.map((line, lineIndex) => (
+              <Fragment key={`${index}-${lineIndex}`}>
+                {lineIndex > 0 ? <br /> : null}
+                {renderInlineMarkdown(line)}
+              </Fragment>
+            ))}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function PaysoAssistantAvatar() {
+  return (
+    <div className="chat-avatar chat-avatar-assistant" aria-hidden="true">
+      <Image
+        src="/brand/payso-primary-logo.png"
+        alt=""
+        width={52}
+        height={52}
+        className="chat-avatar-logo"
+      />
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="chat-message-row chat-message-row-assistant" aria-live="polite">
+      <PaysoAssistantAvatar />
+      <div className="chat-bubble chat-bubble-assistant chat-typing-bubble">
+        <div className="chat-typing-skeleton">
+          <span />
+          <span />
+        </div>
+        <div className="chat-typing-dots" aria-label="Assistant is typing">
+          <i />
+          <i />
+          <i />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 type BrowserSpeechRecognition = {
   continuous: boolean;
@@ -206,6 +538,7 @@ const copy = {
     listening: "กำลังฟัง...",
     voiceUnsupported: "เบราว์เซอร์นี้ยังไม่รองรับการพิมพ์ด้วยเสียง แนะนำใช้ Chrome",
     addFile: "แนบไฟล์",
+    clearChat: "เคลียร์ข้อความในแชท",
     filesReady: "ไฟล์ที่เลือก",
     intentLabel: "เจตนาของคำถาม",
     confidenceLabel: "ระดับความมั่นใจ",
@@ -219,7 +552,7 @@ const copy = {
     no: "ไม่จำเป็น",
     footer: "Prototype system for demonstration purposes, designed to integrate with Supabase for knowledge base management, chat history, and controlled AI response handling.",
     error:
-      "ระบบไม่สามารถประมวลผลคำถามได้ชั่วคราว กรุณาลองใหม่อีกครั้ง หรือใช้ช่องทางติดต่อของ Payso หากเป็นเคสเร่งด่วน",
+      "ขออภัยครับ ตอนนี้ผมตอบได้ไม่สมบูรณ์นัก ลองพิมพ์รายละเอียดอีกนิด หรือเลือกคำถามแนะนำด้านล่างได้เลยครับ",
   },
   en: {
     langToggle: "TH / EN",
@@ -357,6 +690,7 @@ const copy = {
     listening: "Listening...",
     voiceUnsupported: "This browser does not support voice typing. Chrome is recommended.",
     addFile: "Add file",
+    clearChat: "Clear chat messages",
     filesReady: "Selected files",
     intentLabel: "Intent",
     confidenceLabel: "Confidence",
@@ -370,25 +704,9 @@ const copy = {
     no: "Not required",
     footer: "Prototype only. Ready for Supabase-backed knowledge, chat storage, and guarded AI responses.",
     error:
-      "The assistant could not process the request right now. Please try again, or contact Payso directly if the case is urgent.",
+      "Sorry, I could not complete that response just now. Please add a little more detail or choose one of the suggested questions below.",
   },
 } as const;
-
-function createWelcomeMessage(language: Language): Message {
-  return {
-    id: "welcome",
-    role: "assistant",
-    content: copy[language].welcome,
-    meta: {
-      intent: "Greeting",
-      confidence: "High",
-      handover: false,
-      sources: [],
-      reason: "Initial welcome message.",
-      suggestions: copy[language].suggestedQuestions.slice(0, 4),
-    },
-  };
-}
 
 export default function HomePage() {
   const [language, setLanguage] = useState<Language>("th");
@@ -412,11 +730,18 @@ export default function HomePage() {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const isNearBottomRef = useRef(true);
+  const shouldAutoScrollRef = useRef(true);
 
   const t = copy[language];
 
   function getRecognitionLanguage(nextLanguage: Language): string {
     return nextLanguage === "th" ? "th-TH" : "en-US";
+  }
+
+  function isNearBottom(element: HTMLDivElement): boolean {
+    return element.scrollHeight - element.scrollTop - element.clientHeight < 180;
   }
 
   useEffect(() => {
@@ -428,7 +753,7 @@ export default function HomePage() {
         const parsedProfile = JSON.parse(savedProfile) as UserProfile;
         setUserProfile(parsedProfile);
         setPreChatForm(parsedProfile);
-        setMessages([createWelcomeMessage(language)]);
+        setMessages([]);
       }
 
       if (savedConversationId) {
@@ -441,23 +766,38 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    setMessages((current) =>
-      current.length === 1 && current[0]?.id === "welcome"
-        ? [createWelcomeMessage(language)]
-        : current,
-    );
-  }, [language]);
-
-  useEffect(() => {
     setVoiceLanguage(language);
   }, [language]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({
-      top: scrollRef.current.scrollHeight,
-      behavior: "smooth",
-    });
+    const container = scrollRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    if (shouldAutoScrollRef.current || isNearBottomRef.current) {
+      window.requestAnimationFrame(() => {
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: "smooth",
+        });
+      });
+      shouldAutoScrollRef.current = false;
+      isNearBottomRef.current = true;
+    }
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 156)}px`;
+  }, [input]);
 
   useEffect(() => {
     return () => {
@@ -491,14 +831,28 @@ export default function HomePage() {
         }
 
         setMessages((current) => {
-          const welcomeMessage = current.find((message) => message.id === "welcome");
-          const nextMessages = data.messages;
+          const currentById = new Map(current.map((message) => [message.id, message]));
+          const nextMessages = data.messages.map((message) => {
+            const previous = currentById.get(message.id);
 
-          if (welcomeMessage) {
-            return [welcomeMessage, ...nextMessages];
-          }
+            if (
+              !previous?.meta?.suggestions?.length ||
+              message.meta?.suggestions?.length ||
+              !message.meta
+            ) {
+              return message;
+            }
 
-          return nextMessages;
+            return {
+              ...message,
+              meta: {
+                ...message.meta,
+                suggestions: previous.meta.suggestions,
+              } satisfies AssistantMeta,
+            };
+          });
+
+          return dedupeConsecutiveAssistantMessages(nextMessages);
         });
       } catch {
         // Keep chat usable even if polling fails.
@@ -514,6 +868,9 @@ export default function HomePage() {
     if (!trimmed || isLoading || !userProfile || !conversationId) {
       return;
     }
+
+    const chatContainer = scrollRef.current;
+    shouldAutoScrollRef.current = !chatContainer || isNearBottom(chatContainer);
 
     setMessages((current) => [
       ...current,
@@ -552,39 +909,43 @@ export default function HomePage() {
         sessionStorage.setItem(CONVERSATION_STORAGE_KEY, data.conversationId);
       }
 
-      setMessages((current) => [
-        ...current,
-        {
-          id: `${Date.now()}-assistant`,
-          role: "assistant",
-          content: data.answer,
-          meta: {
-            intent: data.intent,
-            confidence: data.confidence,
-            handover: data.handover,
-            sources: data.sources,
-            reason: data.reason,
-            suggestions: data.suggestions,
+      setMessages((current) =>
+        dedupeConsecutiveAssistantMessages([
+          ...current,
+          {
+            id: data.messageId ?? `${Date.now()}-assistant`,
+            role: "assistant",
+            content: data.answer,
+            meta: {
+              intent: data.intent,
+              confidence: data.confidence,
+              handover: data.handover,
+              sources: data.sources,
+              reason: data.reason,
+              suggestions: data.suggestions,
+            },
           },
-        },
-      ]);
+        ]),
+      );
     } catch {
-      setMessages((current) => [
-        ...current,
-        {
-          id: `${Date.now()}-assistant-error`,
-          role: "assistant",
-          content: t.error,
-          meta: {
-            intent: "Out of Scope",
-            confidence: "Low",
-            handover: true,
-            sources: [],
-            reason: "Request failed.",
-            suggestions: copy[language].suggestedQuestions.slice(0, 4),
+      setMessages((current) =>
+        dedupeConsecutiveAssistantMessages([
+          ...current,
+          {
+            id: `${Date.now()}-assistant-error`,
+            role: "assistant",
+            content: t.error,
+            meta: {
+              intent: "Out of Scope",
+              confidence: "Low",
+              handover: true,
+              sources: [],
+              reason: "Request failed.",
+              suggestions: copy[language].suggestedQuestions.slice(0, 4),
+            },
           },
-        },
-      ]);
+        ]),
+      );
     } finally {
       setIsLoading(false);
     }
@@ -613,7 +974,7 @@ export default function HomePage() {
 
     setUserProfile(nextProfile);
     setConversationId(nextConversationId);
-    setMessages([createWelcomeMessage(language)]);
+    setMessages([]);
     sessionStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
     sessionStorage.setItem(CONVERSATION_STORAGE_KEY, nextConversationId);
   }
@@ -630,6 +991,10 @@ export default function HomePage() {
     }
 
     void sendQuestion(input);
+  }
+
+  function handleChatScroll(event: UIEvent<HTMLDivElement>) {
+    isNearBottomRef.current = isNearBottom(event.currentTarget);
   }
 
   function handleMicToggle() {
@@ -691,7 +1056,7 @@ export default function HomePage() {
 
     const latestAssistantMessage = [...messages]
       .reverse()
-      .find((message) => (message.role === "assistant" || message.role === "admin") && message.id !== "welcome");
+      .find((message) => message.role === "assistant" || message.role === "admin");
 
     if (!latestAssistantMessage) {
       return;
@@ -758,6 +1123,23 @@ export default function HomePage() {
           ),
       ),
     );
+  }
+
+  function handleClearChat() {
+    const nextConversationId = crypto.randomUUID();
+
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+
+    setMessages([]);
+    setInput("");
+    setSelectedFiles([]);
+    setIsSpeaking(false);
+    setVoiceUnsupportedMessage(null);
+    setConversationId(nextConversationId);
+    sessionStorage.setItem(CONVERSATION_STORAGE_KEY, nextConversationId);
+    shouldAutoScrollRef.current = true;
   }
 
   function scrollToSection(sectionId: string) {
@@ -1101,240 +1483,295 @@ export default function HomePage() {
                 </div>
               </div>
             ) : (
-            <div className="mt-8 rounded-[30px] border border-payso-blue/10 bg-[#f9fbff] p-4 sm:p-5">
-              <div ref={scrollRef} className="h-[34rem] space-y-4 overflow-y-auto pr-1">
-                {messages.map((message) => {
+            <div className="chat-panel mt-8">
+              <div
+                ref={scrollRef}
+                onScroll={handleChatScroll}
+                className="chat-scroll"
+              >
+                {messages.length === 0 && !isLoading ? (
+                  <div className="chat-empty-state">
+                    <p>{language === "th" ? "เริ่มพิมพ์คำถามหรือเลือกคำถามตัวอย่างเพื่อเริ่มสนทนา" : "Start by typing a question or choose a suggested prompt."}</p>
+                  </div>
+                ) : null}
+
+                {dedupeConsecutiveAssistantMessages(messages).map((message) => {
                   const isAssistant = message.role === "assistant" || message.role === "admin";
-                  const isWelcomeMessage = message.id === "welcome";
                   const isAdmin = message.role === "admin";
+                  const displayInitial = (userProfile?.name?.trim()?.[0] || "U").toUpperCase();
                   const userDisplayName = userProfile?.name?.trim()
                     ? `${t.user} ${userProfile.name.trim()}`
                     : t.user;
+                  const parsedContent = isAssistant
+                    ? parseAssistantMessageContent(message.content)
+                    : { body: message.content, links: [], relatedQuestions: [] };
+                  const suggestionQuestions =
+                    message.meta?.suggestions?.length
+                      ? message.meta.suggestions
+                      : parsedContent.relatedQuestions;
+                  const referenceLinks = [
+                    ...parsedContent.links,
+                    ...(message.meta?.sources ?? []).map((source) => ({
+                      label: source.title || "Payso",
+                      url: source.url,
+                    })),
+                  ].filter((link, index, all) => all.findIndex((item) => item.url === link.url) === index);
 
                   return (
-                    <div key={message.id} className="space-y-3">
+                    <div
+                      key={message.id}
+                      className={`chat-message-row ${
+                        isAssistant ? "chat-message-row-assistant" : "chat-message-row-user"
+                      }`}
+                    >
+                      {isAssistant ? (
+                        isAdmin ? (
+                          <div className="chat-avatar chat-avatar-admin">A</div>
+                        ) : (
+                          <PaysoAssistantAvatar />
+                        )
+                      ) : null}
                       <div
-                        className={`max-w-[92%] rounded-[24px] px-4 py-4 sm:px-5 ${
-                          isAssistant
-                            ? "mr-auto border border-payso-blue/10 bg-white text-payso-ink"
-                            : "ml-auto bg-payso-blue text-white"
-                        } ${isWelcomeMessage ? "max-w-full text-center" : ""}`}
+                        className={`chat-message-stack ${
+                          isAssistant ? "chat-message-stack-assistant" : "chat-message-stack-user"
+                        }`}
                       >
-                        <p
-                          className={`text-xs font-semibold uppercase tracking-[0.18em] ${
-                            isAssistant ? "text-payso-blue" : "text-white/78"
-                          } ${isWelcomeMessage ? "text-center" : ""}`}
-                        >
-                          {isAdmin ? t.admin : isAssistant ? t.assistant : userDisplayName}
-                        </p>
-                        <p
-                          className={`mt-2 whitespace-pre-line text-sm leading-7 ${
-                            isWelcomeMessage ? "mx-auto max-w-5xl text-center" : ""
+                        <div
+                          className={`chat-bubble ${
+                            isAssistant ? "chat-bubble-assistant" : "chat-bubble-user"
                           }`}
                         >
-                          {message.content}
-                        </p>
+                          <p className={`chat-message-author ${isAssistant ? "text-payso-blue" : "text-white/75"}`}>
+                            {isAdmin ? t.admin : isAssistant ? t.assistant : userDisplayName}
+                          </p>
+                          <ChatMarkdown content={parsedContent.body} />
 
-                        {isAssistant && message.meta?.sources?.length ? (
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {message.meta.sources.map((source) => (
-                              <a
-                                key={`${message.id}-${source.url}`}
-                                href={source.url}
-                                target="_blank"
-                                rel="noreferrer noopener"
-                                className="group inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-payso-blue/14 bg-payso-soft px-3 py-2 text-xs font-medium text-payso-blue transition hover:border-payso-blue/28 hover:bg-[#edf3ff]"
-                              >
-                                <span className="border-b border-transparent transition group-hover:border-current hover:border-current">
-                                  {source.title || "ดูข้อมูลจากเว็บไซต์ Payso"}
-                                </span>
-                                <svg
-                                  aria-hidden="true"
-                                  viewBox="0 0 16 16"
-                                  className="h-3.5 w-3.5 shrink-0 opacity-80"
-                                  fill="none"
+                          {isAssistant && referenceLinks.length ? (
+                            <div className="chat-link-list">
+                              {referenceLinks.map((link) => (
+                                <a
+                                  key={`${message.id}-${link.url}`}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noreferrer noopener"
+                                  className="chat-resource-link"
                                 >
-                                  <path
-                                    d="M6 4h6v6M10.5 5.5 4.5 11.5"
-                                    stroke="currentColor"
-                                    strokeWidth="1.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                </svg>
-                              </a>
-                            ))}
-                          </div>
-                        ) : null}
+                                  <span>{link.label}</span>
+                                  <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none">
+                                    <path
+                                      d="M4.5 11.5 11.5 4.5M7 4.5h4.5V9"
+                                      stroke="currentColor"
+                                      strokeWidth="1.5"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </a>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
 
-                        {isAssistant && message.meta?.suggestions?.length ? (
-                          <div
-                            className={`mt-4 flex flex-wrap gap-2 ${
-                              isWelcomeMessage ? "justify-center" : ""
-                            }`}
-                          >
-                            {message.meta.suggestions.map((question) => (
-                              <button
-                                key={`${message.id}-${question}`}
-                                type="button"
-                                onClick={() => void sendQuestion(question)}
-                                className="rounded-full border border-payso-blue/14 bg-white px-3 py-2 text-xs font-medium text-payso-dark transition hover:bg-payso-soft"
-                              >
-                                {question}
-                              </button>
-                            ))}
+                        {isAssistant && suggestionQuestions.length ? (
+                          <div className="chat-suggestion-block">
+                            <div className="chat-suggestion-row">
+                              {suggestionQuestions.slice(0, 3).map((question) => (
+                                <button
+                                  key={`${message.id}-${question}`}
+                                  type="button"
+                                  onClick={() => void sendQuestion(question)}
+                                  disabled={isLoading}
+                                  className="chat-suggestion-chip"
+                                >
+                                  {question}
+                                </button>
+                              ))}
+                            </div>
                           </div>
                         ) : null}
                       </div>
 
+                      {!isAssistant ? (
+                        <div className="chat-avatar chat-avatar-user">{displayInitial}</div>
+                      ) : null}
                     </div>
                   );
                 })}
 
-                {isLoading ? (
-                  <div className="mr-auto max-w-[92%] rounded-[24px] border border-payso-blue/10 bg-white px-4 py-4 text-payso-ink sm:px-5">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-payso-blue">
-                      {t.assistant}
-                    </p>
-                    <p className="mt-2 text-sm leading-7">{t.sending}</p>
-                  </div>
-                ) : null}
+                {isLoading ? <TypingIndicator /> : null}
               </div>
 
-              <form onSubmit={handleSubmit} className="mt-5">
-                <div className="flex items-center gap-3">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      multiple
-                      onChange={handleFileSelect}
-                      className="hidden"
+              <form onSubmit={handleSubmit} className="chat-composer-wrap">
+                <div className="chat-composer">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="chat-icon-button"
+                    aria-label={t.addFile}
+                  >
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                      <path
+                        d="M12 5v14M5 12h14"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+
+                  <div className="chat-composer-field">
+                    <textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(event) => setInput(event.target.value)}
+                      onKeyDown={handleInputKeyDown}
+                      placeholder={t.inputPlaceholder}
+                      rows={1}
+                      className="chat-textarea"
                     />
+
+                    {selectedFiles.length > 0 ? (
+                      <div className="chat-file-row">
+                        {selectedFiles.map((file) => (
+                          <button
+                            key={`${file.name}-${file.size}-${file.lastModified}`}
+                            type="button"
+                            onClick={() => removeSelectedFile(file)}
+                            className="chat-file-chip"
+                          >
+                            <span className="max-w-[180px] truncate">{file.name}</span>
+                            <span className="text-payso-muted">x</span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="chat-composer-actions">
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-payso-blue/10 bg-white text-payso-dark shadow-[0_12px_28px_rgba(16,43,177,0.08)] transition hover:bg-payso-soft"
-                      aria-label={t.addFile}
+                      onClick={handleMicToggle}
+                      className={`chat-icon-button ${
+                        isListening
+                          ? "bg-payso-soft text-payso-blue"
+                          : "bg-white text-payso-dark hover:bg-payso-soft"
+                      }`}
+                      aria-label={t.voiceTyping}
                     >
                       <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none">
                         <path
-                          d="M12 5v14M5 12h14"
+                          d="M12 4a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3Zm-6 7a6 6 0 0 0 12 0m-6 6v3m-4 0h8"
                           stroke="currentColor"
-                          strokeWidth="1.8"
+                          strokeWidth="1.7"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       </svg>
                     </button>
-
-                    <div className="min-w-0 flex-1 rounded-full border border-payso-blue/10 bg-white px-2 py-2 shadow-[0_18px_40px_rgba(16,43,177,0.08)]">
-                      <div className="flex items-center gap-3">
-                        <div className="min-w-0 flex-1 px-2">
-                          <textarea
-                            value={input}
-                            onChange={(event) => setInput(event.target.value)}
-                            onKeyDown={handleInputKeyDown}
-                            placeholder={t.inputPlaceholder}
-                            rows={1}
-                            className="min-h-[44px] w-full resize-none bg-transparent px-4 py-2 text-sm leading-7 text-payso-ink outline-none placeholder:text-payso-muted"
+                    <button
+                      type="button"
+                      onClick={handleVoiceReplyToggle}
+                      className={`chat-icon-button ${
+                        isSpeaking
+                          ? "bg-payso-blue text-white"
+                          : "bg-white text-payso-dark hover:bg-payso-soft"
+                      }`}
+                      aria-label={t.voiceReply}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none">
+                        {isSpeaking ? (
+                          <path
+                            d="M9 9.25A1.25 1.25 0 0 1 10.25 8h3.5A1.25 1.25 0 0 1 15 9.25v5.5A1.25 1.25 0 0 1 13.75 16h-3.5A1.25 1.25 0 0 1 9 14.75v-5.5Z"
+                            stroke="currentColor"
+                            strokeWidth="1.7"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                           />
-                        </div>
-
-                        <div className="flex items-center gap-2 pr-1">
-                          <button
-                            type="button"
-                            onClick={handleMicToggle}
-                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-                              isListening
-                                ? "bg-payso-soft text-payso-blue"
-                                : "bg-transparent text-payso-blue hover:bg-payso-soft"
-                            }`}
-                            aria-label={t.voiceTyping}
-                          >
-                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                              <path
-                                d="M12 4a3 3 0 0 1 3 3v4a3 3 0 0 1-6 0V7a3 3 0 0 1 3-3Zm-6 7a6 6 0 0 0 12 0m-6 6v3m-4 0h8"
-                                stroke="currentColor"
-                                strokeWidth="1.7"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleVoiceReplyToggle}
-                            className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition ${
-                              isSpeaking
-                                ? "bg-payso-blue text-white"
-                                : "bg-transparent text-payso-blue hover:bg-payso-soft"
-                            }`}
-                            aria-label={t.voiceReply}
-                          >
-                            <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none">
-                              {isSpeaking ? (
-                                <path
-                                  d="M9 9.25A1.25 1.25 0 0 1 10.25 8h3.5A1.25 1.25 0 0 1 15 9.25v5.5A1.25 1.25 0 0 1 13.75 16h-3.5A1.25 1.25 0 0 1 9 14.75v-5.5Z"
-                                  stroke="currentColor"
-                                  strokeWidth="1.7"
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                />
-                              ) : (
-                                <>
-                                  <path
-                                    d="M5 14h2.4l3.6 3V7L7.4 10H5v4Z"
-                                    stroke="currentColor"
-                                    strokeWidth="1.7"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  />
-                                  <path
-                                    d="M15 10.5a3.5 3.5 0 0 1 0 3"
-                                    stroke="currentColor"
-                                    strokeWidth="1.7"
-                                    strokeLinecap="round"
-                                  />
-                                  <path
-                                    d="M17.5 8a7 7 0 0 1 0 8"
-                                    stroke="currentColor"
-                                    strokeWidth="1.7"
-                                    strokeLinecap="round"
-                                  />
-                                </>
-                              )}
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-
-                      {selectedFiles.length > 0 ? (
-                        <div className="flex flex-wrap gap-2 px-4 pb-2 pt-1">
-                          {selectedFiles.map((file) => (
-                            <button
-                              key={`${file.name}-${file.size}-${file.lastModified}`}
-                              type="button"
-                              onClick={() => removeSelectedFile(file)}
-                              className="inline-flex items-center gap-2 rounded-full bg-payso-soft px-3 py-1.5 text-xs font-medium text-payso-dark transition hover:bg-[#e8efff]"
-                            >
-                              <span className="max-w-[180px] truncate">{file.name}</span>
-                              <span className="text-payso-muted">x</span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-
-                    {(isListening || voiceUnsupportedMessage || isLoading) ? (
-                      <div className="min-h-[24px] px-2 pt-2 text-xs text-payso-muted">
-                        {isListening
-                          ? t.listening
-                          : isLoading
-                            ? t.sending
-                            : voiceUnsupportedMessage ?? ""}
-                      </div>
-                    ) : null}
+                        ) : (
+                          <>
+                            <path
+                              d="M5 14h2.4l3.6 3V7L7.4 10H5v4Z"
+                              stroke="currentColor"
+                              strokeWidth="1.7"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <path
+                              d="M15 10.5a3.5 3.5 0 0 1 0 3"
+                              stroke="currentColor"
+                              strokeWidth="1.7"
+                              strokeLinecap="round"
+                            />
+                            <path
+                              d="M17.5 8a7 7 0 0 1 0 8"
+                              stroke="currentColor"
+                              strokeWidth="1.7"
+                              strokeLinecap="round"
+                            />
+                          </>
+                        )}
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClearChat}
+                      disabled={isLoading || messages.length === 0}
+                      className="chat-icon-button"
+                      aria-label={t.clearChat}
+                      title={t.clearChat}
+                    >
+                      <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                        <path
+                          d="M6.5 8h11M10 11v5M14 11v5M8 8l.6 10.2A2 2 0 0 0 10.6 20h2.8a2 2 0 0 0 2-1.8L16 8M10 8V6.7A1.7 1.7 0 0 1 11.7 5h.6A1.7 1.7 0 0 1 14 6.7V8"
+                          stroke="currentColor"
+                          strokeWidth="1.7"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || isLoading}
+                      className="chat-send-button"
+                      aria-label={isLoading ? t.sending : t.send}
+                    >
+                      {isLoading ? (
+                        <span className="chat-send-spinner" />
+                      ) : (
+                        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none">
+                          <path
+                            d="M5 12h13M13 6l6 6-6 6"
+                            stroke="currentColor"
+                            strokeWidth="1.9"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
+
+                {(isListening || voiceUnsupportedMessage || isLoading) ? (
+                  <div className="chat-status-line">
+                    {isListening
+                      ? t.listening
+                      : isLoading
+                        ? language === "th"
+                          ? "Payso Assistant กำลังพิมพ์..."
+                          : "Payso Assistant is typing..."
+                        : voiceUnsupportedMessage ?? ""}
+                  </div>
+                ) : null}
               </form>
             </div>
             )}

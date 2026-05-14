@@ -17,13 +17,42 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
   },
 });
 
-const knowledgePath = resolve(process.cwd(), "data", "payso-knowledge.json");
-const knowledgeJson = await readFile(knowledgePath, "utf8");
-const knowledgeItems = JSON.parse(knowledgeJson);
+const knowledgeFiles = ["payso-knowledge.json", "payso-knowledge-v2.json", "payso-faq.json"];
 
-if (!Array.isArray(knowledgeItems)) {
-  console.error("Knowledge base file is not an array.");
-  process.exit(1);
+function isKnowledgeItem(item) {
+  return (
+    item &&
+    typeof item.id === "string" &&
+    typeof item.product === "string" &&
+    typeof item.category === "string" &&
+    typeof item.title === "string" &&
+    typeof item.content === "string" &&
+    typeof item.sourceUrl === "string" &&
+    Array.isArray(item.keywords) &&
+    item.keywords.every((keyword) => typeof keyword === "string")
+  );
+}
+
+const knowledgeItems = [];
+
+for (const fileName of knowledgeFiles) {
+  const knowledgePath = resolve(process.cwd(), "data", fileName);
+  const knowledgeJson = await readFile(knowledgePath, "utf8");
+  const parsedItems = JSON.parse(knowledgeJson);
+
+  if (!Array.isArray(parsedItems)) {
+    console.error(`${fileName} is not an array.`);
+    process.exit(1);
+  }
+
+  const validItems = parsedItems.filter(isKnowledgeItem);
+  const skippedItems = parsedItems.length - validItems.length;
+
+  if (skippedItems > 0) {
+    console.warn(`Skipped ${skippedItems} invalid items from ${fileName}.`);
+  }
+
+  knowledgeItems.push(...validItems);
 }
 
 const rows = knowledgeItems.map((item) => ({
@@ -43,6 +72,22 @@ for (let index = 0; index < rows.length; index += 100) {
   });
 
   if (error) {
+    if (error.message.includes('no field "updated_at"')) {
+      console.warn("Upsert failed because the remote updated_at trigger is out of sync. Inserting new chunks only.");
+
+      const { error: insertError } = await supabase.from("knowledge_chunks").upsert(batch, {
+        onConflict: "id",
+        ignoreDuplicates: true,
+      });
+
+      if (!insertError) {
+        continue;
+      }
+
+      console.error(`Failed to insert batch ${index / 100 + 1}:`, insertError.message);
+      process.exit(1);
+    }
+
     console.error(`Failed to sync batch ${index / 100 + 1}:`, error.message);
     process.exit(1);
   }

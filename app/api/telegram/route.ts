@@ -1,6 +1,7 @@
 import {
   findConversationIdByTelegramReply,
   getConversationStatus,
+  markConversationAiActive,
   markConversationAdminTakeover,
   saveChatMessage,
 } from "@/lib/chat-store";
@@ -58,35 +59,36 @@ export async function POST(request: Request) {
     const callbackQuery = body.callback_query;
     const callbackData = callbackQuery?.data?.trim() ?? "";
     let didMarkTakeover = false;
+    let didResumeAi = false;
     let didSaveAdminReply = false;
 
-    if (callbackQuery?.id && callbackData.startsWith("takeover:")) {
-      const conversationId = callbackData.slice("takeover:".length).trim();
+    if (callbackQuery?.id && callbackData.startsWith("admin_takeover:")) {
+      const conversationId = callbackData.slice("admin_takeover:".length).trim();
       didMarkTakeover = conversationId
         ? await markConversationAdminTakeover(conversationId)
         : false;
 
       await callTelegramApi("answerCallbackQuery", {
         callback_query_id: callbackQuery.id,
-        text: didMarkTakeover
-          ? "รับแชทโดยแอดมินเรียบร้อยแล้ว"
-          : "ไม่สามารถรับช่วงแชทนี้ได้",
+        text: didMarkTakeover ? "เปิดโหมดแอดมินแล้ว" : "ไม่สามารถเปิดโหมดแอดมินได้",
         show_alert: false,
       });
+    }
 
-      if (callbackQuery.message?.chat?.id && callbackQuery.message?.message_id) {
-        await callTelegramApi("editMessageReplyMarkup", {
-          chat_id: callbackQuery.message.chat.id,
-          message_id: callbackQuery.message.message_id,
-          reply_markup: {
-            inline_keyboard: [],
-          },
-        });
-      }
+    if (callbackQuery?.id && callbackData.startsWith("ai_resume:")) {
+      const conversationId = callbackData.slice("ai_resume:".length).trim();
+      didResumeAi = conversationId ? await markConversationAiActive(conversationId) : false;
+
+      await callTelegramApi("answerCallbackQuery", {
+        callback_query_id: callbackQuery.id,
+        text: didResumeAi ? "เปิดโหมด AI แล้ว" : "ไม่สามารถเปิดโหมด AI ได้",
+        show_alert: false,
+      });
     }
 
     const incomingMessage = body.message;
     const telegramChatId = incomingMessage?.chat?.id;
+    const incomingMessageId = incomingMessage?.message_id;
     const repliedMessageId = incomingMessage?.reply_to_message?.message_id;
     const adminText = incomingMessage?.text?.trim();
 
@@ -105,8 +107,19 @@ export async function POST(request: Request) {
       if (conversationId) {
         const conversationStatus = await getConversationStatus(conversationId);
 
-        if (conversationStatus !== "handover") {
-          await markConversationAdminTakeover(conversationId);
+        if (conversationStatus !== "admin_takeover" && conversationStatus !== "handover") {
+          await callTelegramApi("sendMessage", {
+            chat_id: telegramChatId,
+            text: "ตอนนี้อยู่ในโหมด AI หากต้องการตอบเอง กรุณากดรับแชทโดยแอดมินก่อน",
+            ...(typeof incomingMessageId === "number" ? { reply_to_message_id: incomingMessageId } : {}),
+          });
+
+          return Response.json({
+            ok: true,
+            adminTakeover: didMarkTakeover,
+            aiResume: didResumeAi,
+            adminReplySaved: false,
+          });
         }
 
         const messageId = await saveChatMessage({
@@ -147,6 +160,7 @@ export async function POST(request: Request) {
     return Response.json({
       ok: true,
       adminTakeover: didMarkTakeover,
+      aiResume: didResumeAi,
       adminReplySaved: didSaveAdminReply,
     });
   } catch (error) {

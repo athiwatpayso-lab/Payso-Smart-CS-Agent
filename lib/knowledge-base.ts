@@ -1,4 +1,6 @@
 import rawKnowledgeBase from "@/data/payso-knowledge.json";
+import rawKnowledgeBaseV2 from "@/data/payso-knowledge-v2.json";
+import rawPaysoFaq from "@/data/payso-faq.json";
 
 export type KnowledgeItem = {
   id: string;
@@ -37,7 +39,11 @@ export function getKnowledgeBase(): KnowledgeItem[] {
   }
 
   try {
-    const parsed = Array.isArray(rawKnowledgeBase) ? rawKnowledgeBase : [];
+    const parsed = [
+      ...(Array.isArray(rawKnowledgeBase) ? rawKnowledgeBase : []),
+      ...(Array.isArray(rawKnowledgeBaseV2) ? rawKnowledgeBaseV2 : []),
+      ...(Array.isArray(rawPaysoFaq) ? rawPaysoFaq : []),
+    ];
 
     cachedKnowledgeBase = parsed.filter(isKnowledgeItem);
     return cachedKnowledgeBase;

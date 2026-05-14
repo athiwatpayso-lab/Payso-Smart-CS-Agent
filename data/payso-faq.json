@@ -1,0 +1,182 @@
+[
+  {
+    "id": "faq-payso-overview",
+    "product": "Payso",
+    "category": "FAQ",
+    "title": "Payso คืออะไร",
+    "content": "Payso คือผู้ให้บริการที่รวมทุกการรับชำระเงินออนไลน์และหน้าร้านไว้ในที่เดียว เพื่อช่วยให้ร้านค้าและธุรกิจจัดการการรับชำระเงินได้ทันสมัยและสะดวกขึ้น",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["Payso", "Payso คืออะไร", "บริการ Payso", "ข้อมูลทั่วไป", "รับชำระเงิน"]
+  },
+  {
+    "id": "faq-signup-free",
+    "product": "Payso",
+    "category": "FAQ",
+    "title": "สมัครใช้งานมีค่าใช้จ่ายไหม",
+    "content": "ร้านค้าสามารถเริ่มต้นใช้งาน Payso ได้ฟรีเพื่อเพิ่มโอกาสในการขาย",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["สมัครใช้งาน", "สมัครฟรี", "เริ่มต้นใช้งาน", "ค่าใช้จ่าย", "ฟรี"]
+  },
+  {
+    "id": "faq-business-types",
+    "product": "Payso",
+    "category": "FAQ",
+    "title": "Payso รองรับธุรกิจประเภทไหนบ้าง",
+    "content": "Payso รองรับธุรกิจหลายรูปแบบ ตั้งแต่ SME, Startup, SaaS ไปจนถึงองค์กรขนาดใหญ่ รวมถึงธุรกิจอย่างคลินิกและร้านอาหาร",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ประเภทธุรกิจ", "SME", "Startup", "SaaS", "Enterprise", "คลินิก", "ร้านอาหาร"]
+  },
+  {
+    "id": "faq-fee-calculator",
+    "product": "Payso",
+    "category": "Pricing",
+    "title": "ตรวจสอบค่าธรรมเนียมและยอดรับสุทธิ",
+    "content": "ร้านค้าสามารถใช้เครื่องมือคำนวณค่าธรรมเนียมบนเว็บไซต์ Payso เพื่อดูรายละเอียดค่าธรรมเนียมและยอดรับสุทธิได้",
+    "sourceUrl": "https://payso.co/th/payment-fee-calculator",
+    "keywords": ["ค่าธรรมเนียม", "ยอดรับสุทธิ", "คำนวณค่าธรรมเนียม", "fee calculator", "pricing"]
+  },
+  {
+    "id": "faq-security-license",
+    "product": "Payso",
+    "category": "Security",
+    "title": "ความปลอดภัยของ Payso",
+    "content": "Payso ดำเนินงานภายใต้การกำกับดูแลของธนาคารแห่งประเทศไทย และได้รับใบอนุญาตประกอบธุรกิจชำระเงินอิเล็กทรอนิกส์อย่างถูกต้อง",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ความปลอดภัย", "ธนาคารแห่งประเทศไทย", "ใบอนุญาต", "ชำระเงินอิเล็กทรอนิกส์", "ปลอดภัยไหม"]
+  },
+  {
+    "id": "faq-payment-channels",
+    "product": "e-Payment",
+    "category": "FAQ",
+    "title": "รองรับช่องทางชำระเงินอะไรบ้าง",
+    "content": "Payso รองรับช่องทางชำระเงินหลายแบบ เช่น บัตรเครดิตและเดบิต ระบบผ่อนชำระ QR Code Mobile Banking E-wallet และการจ่ายบิล ณ จุดรับชำระ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ช่องทางชำระเงิน", "บัตรเครดิต", "บัตรเดบิต", "ผ่อนชำระ", "QR Code", "Mobile Banking", "E-wallet"]
+  },
+  {
+    "id": "faq-social-payment-link",
+    "product": "Payment Link",
+    "category": "FAQ",
+    "title": "ขายของผ่านโซเชียลควรใช้บริการไหน",
+    "content": "สำหรับการขายผ่าน LINE Facebook หรือช่องทางโซเชียล แนะนำ Payment Link เพราะสามารถสร้างลิงก์ชำระเงินและส่งให้ลูกค้าชำระได้ทันที",
+    "sourceUrl": "https://payso.co/th/payment-link",
+    "keywords": ["Payment Link", "ขายผ่านโซเชียล", "LINE", "Facebook", "ลิงก์ชำระเงิน", "social commerce"]
+  },
+  {
+    "id": "faq-website-app-epayment",
+    "product": "e-Payment",
+    "category": "FAQ",
+    "title": "รับเงินบนเว็บไซต์หรือแอปพลิเคชัน",
+    "content": "หากต้องการรับเงินบนเว็บไซต์หรือแอปพลิเคชัน สามารถใช้ระบบ e-Payment ของ Payso ซึ่งรองรับการเชื่อมต่อกับเว็บไซต์และแอปพลิเคชันได้หลายรูปแบบ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["e-Payment", "เว็บไซต์", "แอปพลิเคชัน", "รับเงินออนไลน์", "payment gateway"]
+  },
+  {
+    "id": "faq-edc-pos",
+    "product": "EDC & POS",
+    "category": "FAQ",
+    "title": "มีเครื่องรูดบัตรสำหรับหน้าร้านไหม",
+    "content": "Payso มีเครื่อง EDC & POS แบบ All-in-One สำหรับรับชำระเงินหน้าร้าน โดยรวมฟังก์ชันการรับชำระเงินไว้ในเครื่องเดียว",
+    "sourceUrl": "https://payso.co/th/edc",
+    "keywords": ["EDC", "POS", "เครื่องรูดบัตร", "หน้าร้าน", "All-in-One"]
+  },
+  {
+    "id": "faq-installment",
+    "product": "e-Payment",
+    "category": "FAQ",
+    "title": "ลูกค้าสามารถผ่อนชำระสินค้าได้ไหม",
+    "content": "ระบบของ Payso รองรับการผ่อนชำระ เพื่อช่วยเพิ่มทางเลือกและช่วยให้ลูกค้าตัดสินใจซื้อได้ง่ายขึ้น",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["ผ่อนชำระ", "installment", "ผ่อนสินค้า", "บัตรเครดิต", "ชำระเงิน"]
+  },
+  {
+    "id": "faq-suresure-slip",
+    "product": "SureSure",
+    "category": "FAQ",
+    "title": "มีระบบตรวจสอบสลิปปลอมไหม",
+    "content": "บริการ SureSure ของ Payso ช่วยตรวจสอบความถูกต้องและความปลอดภัยของสลิปการโอนเงินโดยอัตโนมัติ",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["SureSure", "ตรวจสอบสลิป", "สลิปปลอม", "สลิปโอนเงิน", "ตรวจสลิป"]
+  },
+  {
+    "id": "faq-dashboard",
+    "product": "Payso",
+    "category": "Back-office",
+    "title": "ระบบหลังบ้านดูอะไรได้บ้าง",
+    "content": "ระบบหลังบ้านของ Payso แสดงข้อมูลการชำระเงินแบบเรียลไทม์ 24 ชั่วโมง เช่น กราฟรายรับ ภาพรวมธุรกิจ รายงานยอดขาย และสถิติผู้ใช้บริการ",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["ระบบหลังบ้าน", "dashboard", "แดชบอร์ด", "รายงานยอดขาย", "กราฟรายรับ", "เรียลไทม์"]
+  },
+  {
+    "id": "faq-refund",
+    "product": "Payso",
+    "category": "Back-office",
+    "title": "สามารถคืนเงินให้ลูกค้าได้ไหม",
+    "content": "ร้านค้าสามารถบริหารจัดการรายการและทำรายการคืนเงินให้ลูกค้าได้ด้วยตนเองผ่านระบบหลังบ้านของ Payso",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["คืนเงิน", "Refund", "refund", "ระบบหลังบ้าน", "จัดการรายการ"]
+  },
+  {
+    "id": "faq-tax-invoice",
+    "product": "Payso",
+    "category": "Back-office",
+    "title": "ระบบสามารถออกใบกำกับภาษีได้หรือไม่",
+    "content": "ระบบหลังบ้านของ Payso มีฟีเจอร์รองรับการออกใบกำกับภาษี เพื่อช่วยเพิ่มความสะดวกในการจัดการเอกสารของร้านค้า",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["ใบกำกับภาษี", "tax invoice", "ใบเสร็จ", "receipt", "ออกใบกำกับภาษี", "ระบบหลังบ้าน"]
+  },
+  {
+    "id": "faq-paysoon",
+    "product": "PaySoon",
+    "category": "FAQ",
+    "title": "PaySoon คือบริการสำหรับอะไร",
+    "content": "PaySoon เป็นบริการชำระเงินออนไลน์ระหว่างธุรกิจกับธุรกิจหรือ B2B เพื่อช่วยเพิ่มประสิทธิภาพในการจัดการกระแสเงินสด",
+    "sourceUrl": "https://payso.co/th",
+    "keywords": ["PaySoon", "B2B", "ชำระเงินธุรกิจ", "กระแสเงินสด", "ธุรกิจกับธุรกิจ"]
+  },
+  {
+    "id": "faq-api",
+    "product": "Payso",
+    "category": "Integration",
+    "title": "นักพัฒนาสามารถเชื่อมต่อผ่าน API ได้ไหม",
+    "content": "Payso รองรับการเชื่อมต่อผ่าน API และมีเอกสาร API สำหรับนักพัฒนา เพื่อช่วยให้การเชื่อมต่อระบบทำได้ง่ายขึ้น",
+    "sourceUrl": "https://api-docs.payso.co/docs/api/overviews",
+    "keywords": ["API", "api docs", "API Documentation", "developer", "นักพัฒนา", "เชื่อมต่อ API", "integration"]
+  },
+  {
+    "id": "faq-plugins-modules",
+    "product": "Payso",
+    "category": "Integration",
+    "title": "เว็บไซต์สำเร็จรูปเชื่อมต่อ Payso อย่างไร",
+    "content": "Payso มี Plugins & Modules สำเร็จรูปสำหรับแพลตฟอร์ม Shopping Cart ชั้นนำ เพื่อช่วยให้ร้านค้าตั้งค่าและเชื่อมต่อระบบได้ง่ายขึ้น",
+    "sourceUrl": "https://api-docs.payso.co/docs/api/overviews",
+    "keywords": ["Plugins", "Modules", "plugin", "Shopping Cart", "Shopify", "WooCommerce", "เชื่อมต่อเว็บไซต์"]
+  },
+  {
+    "id": "faq-video-guide",
+    "product": "Payso",
+    "category": "Support",
+    "title": "มีวิดีโอสอนการใช้งานระบบเบื้องต้นไหม",
+    "content": "Payso มีวิดีโอสอนการใช้งานเบื้องต้น โดยสามารถดูได้จากเมนูวิดีโอสอนการใช้งานในส่วนแหล่งข้อมูลบนเว็บไซต์",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["วิดีโอสอนการใช้งาน", "คู่มือ", "วิธีใช้งาน", "tutorial", "help"]
+  },
+  {
+    "id": "faq-training",
+    "product": "Payso",
+    "category": "Support",
+    "title": "นัดหมายอบรมการใช้งานสำหรับร้านค้าใหม่ได้ไหม",
+    "content": "ร้านค้าสามารถนัดหมายเทรนนิ่งออนไลน์สำหรับการใช้งานระบบ Payso ผ่านหน้าเว็บไซต์ได้",
+    "sourceUrl": "https://payso.co/th/help",
+    "keywords": ["อบรม", "เทรนนิ่ง", "training", "นัดหมาย", "ร้านค้าใหม่", "สอนใช้งาน"]
+  },
+  {
+    "id": "faq-contact-support",
+    "product": "Payso",
+    "category": "Contact",
+    "title": "หากต้องการความช่วยเหลือติดต่อช่องทางไหน",
+    "content": "สามารถติดต่อ Payso ได้ที่โทร 02-481-6956 อีเมล sales@payso.co หรือ LINE @payso",
+    "sourceUrl": "https://payso.co/th/contact",
+    "keywords": ["ติดต่อ", "contact", "support", "02-481-6956", "sales@payso.co", "LINE", "@payso"]
+  }
+]

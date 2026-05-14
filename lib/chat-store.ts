@@ -29,7 +29,7 @@ type HandoverParams = {
   priority: "normal" | "high" | "urgent";
 };
 
-type ConversationStatus = "open" | "handover" | "closed";
+type ConversationStatus = "open" | "ai_active" | "admin_takeover" | "handover" | "closed";
 
 type SaveQuestionEnrichmentParams = {
   originalQuestion: string;
@@ -186,7 +186,7 @@ export async function markConversationAdminTakeover(
   const { error: conversationError } = await supabase
     .from("conversations")
     .update({
-      status: "handover",
+      status: "admin_takeover",
       last_message_at: new Date().toISOString(),
     })
     .eq("id", conversationId);
@@ -204,6 +204,26 @@ export async function markConversationAdminTakeover(
     .in("status", ["pending", "in_progress"]);
 
   return true;
+}
+
+export async function markConversationAiActive(
+  conversationId: string,
+): Promise<boolean> {
+  const supabase = getSupabaseAdmin();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const { error } = await supabase
+    .from("conversations")
+    .update({
+      status: "ai_active",
+      last_message_at: new Date().toISOString(),
+    })
+    .eq("id", conversationId);
+
+  return !error;
 }
 
 export async function saveTelegramMessageLink(params: {

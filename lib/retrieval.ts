@@ -122,6 +122,13 @@ const GENERAL_PAYSO_SIGNALS = [
   "บริการ",
 ];
 
+const TAX_INVOICE_SIGNALS = [
+  "ใบกำกับภาษี",
+  "ใบเสร็จ",
+  "tax invoice",
+  "receipt",
+];
+
 function normalizeText(text: string): string {
   return text.toLowerCase().replace(/\s+/g, " ").trim();
 }
@@ -208,6 +215,7 @@ function productBias(question: string, item: KnowledgeItem): number {
   const asksGeneralPayso =
     normalizedQuestion.includes("payso") &&
     GENERAL_PAYSO_SIGNALS.some((signal) => normalizedQuestion.includes(signal));
+  const asksTaxInvoice = TAX_INVOICE_SIGNALS.some((signal) => normalizedQuestion.includes(signal));
 
   let score = 0;
 
@@ -244,6 +252,14 @@ function productBias(question: string, item: KnowledgeItem): number {
 
     if (isHomepageItem(item)) {
       score += 60;
+    }
+  }
+
+  if (asksTaxInvoice) {
+    const itemText = normalizeText([item.title, item.content, item.keywords.join(" ")].join(" "));
+
+    if (TAX_INVOICE_SIGNALS.some((signal) => itemText.includes(normalizeText(signal)))) {
+      score += 220;
     }
   }
 
@@ -347,6 +363,32 @@ function retrieveFromLocalKnowledge(question: string): RetrievalResult {
   return buildResult(trimmedQuestion, rankedItems);
 }
 
+function mergeRetrievalResults(
+  question: string,
+  supabaseResult: RetrievalResult,
+  localResult: RetrievalResult
+): RetrievalResult {
+  const rankedItems: Array<{ item: KnowledgeItem; score: number }> = [];
+  const seenIds = new Set<string>();
+
+  for (const [sourceIndex, result] of [supabaseResult, localResult].entries()) {
+    result.items.forEach((item, itemIndex) => {
+      if (seenIds.has(item.id)) {
+        return;
+      }
+
+      seenIds.add(item.id);
+      rankedItems.push({
+        item,
+        score: result.score - itemIndex * 5 + (sourceIndex === 0 ? 10 : 0),
+      });
+    });
+  }
+
+  rankedItems.sort((left, right) => right.score - left.score);
+  return buildResult(question, rankedItems);
+}
+
 async function retrieveFromSupabase(question: string): Promise<RetrievalResult | null> {
   const supabase = getSupabaseAdmin();
 
@@ -386,10 +428,11 @@ async function retrieveFromSupabase(question: string): Promise<RetrievalResult |
 
 export async function retrieveKnowledge(question: string): Promise<RetrievalResult> {
   const supabaseResult = await retrieveFromSupabase(question);
+  const localResult = retrieveFromLocalKnowledge(question);
 
   if (supabaseResult) {
-    return supabaseResult;
+    return mergeRetrievalResults(question, supabaseResult, localResult);
   }
 
-  return retrieveFromLocalKnowledge(question);
+  return localResult;
 }

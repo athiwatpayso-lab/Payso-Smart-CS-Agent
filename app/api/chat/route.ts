@@ -23,7 +23,7 @@ import {
 } from "@/lib/guardrails";
 import { classifyIntent } from "@/lib/intent-classifier";
 import { generateLLMAnswer } from "@/lib/llm";
-import { detectLanguage } from "@/lib/prompt";
+import { detectLanguage, sanitizeRetrievedContext, type PromptContextItem } from "@/lib/prompt";
 import { retrieveKnowledge, type RetrievalResult } from "@/lib/retrieval";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { sendTelegramNotification } from "@/lib/telegram";
@@ -117,6 +117,29 @@ const PAYSO_SIGNALS = [
   "plugin",
   "merchant",
   "payment",
+  "ใบกำกับภาษี",
+  "ใบเสร็จ",
+  "tax invoice",
+  "receipt",
+  "ระบบหลังบ้าน",
+  "dashboard",
+  "บริการ",
+  "มีบริการอะไรบ้าง",
+  "คืออะไร",
+  "refund",
+  "refung",
+  "chargeback",
+  "payment failed",
+  "payment error",
+  "ชำระเงินไม่ผ่าน",
+  "จ่ายเงินไม่ได้",
+  "คืนเงิน",
+  "ขอคืนเงิน",
+  "รายการคืนเงิน",
+  "ยกเลิกรายการ",
+  "ชำระไม่ได้",
+  "จ่ายไม่ได้",
+  "โอนไม่ได้",
   "ชำระเงิน",
   "รับเงิน",
   "ร้านค้า",
@@ -126,8 +149,67 @@ const PAYSO_SIGNALS = [
   "ระบบรับชำระเงิน",
 ];
 
+const VAGUE_SUPPORT_TERMS = [
+  "สอบถาม",
+  "สอบถามหน่อย",
+  "ขอสอบถาม",
+  "อยากสอบถาม",
+  "ขอข้อมูล",
+  "ขอข้อมูลหน่อย",
+  "ข้อมูลหน่อย",
+  "ใช้งานยังไง",
+  "ใช้งานอย่างไร",
+  "วิธีใช้งาน",
+  "เริ่มยังไง",
+  "เริ่มใช้งานยังไง",
+  "อยากใช้งาน",
+  "แนะนำหน่อย",
+  "ช่วยแนะนำ",
+  "ask something",
+  "need information",
+  "more information",
+  "how to use",
+  "how do i use",
+  "getting started",
+];
+
+const SPECIFIC_SUPPORT_TERMS = [
+  "payment link",
+  "e-payment",
+  "edc",
+  "api",
+  "webhook",
+  "plugin",
+  "ใบกำกับภาษี",
+  "ใบเสร็จ",
+  "tax invoice",
+  "receipt",
+  "ระบบหลังบ้าน",
+  "dashboard",
+  "ค่าธรรมเนียม",
+  "ราคา",
+  "สมัคร",
+  "ลงทะเบียน",
+  "ถอนเงิน",
+  "คืนเงิน",
+  "refund",
+  "chargeback",
+  "error",
+  "ไม่ผ่าน",
+  "ไม่ได้",
+  "ลิงก์",
+  "ชำระ",
+  "รับเงิน",
+  "เชื่อมต่อ",
+];
+
+const CLARIFICATION_SUGGESTIONS = {
+  th: ["สมัคร Payso ต้องใช้อะไรบ้าง", "Payment Link ใช้งานอย่างไร", "Payso เชื่อมต่อ API ได้ไหม"],
+  en: ["How do I register for Payso?", "How does Payment Link work?", "Can Payso integrate via API?"],
+} as const;
+
 const OPENROUTER_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "qwen/qwen3-next-80b-a3b-instruct:free";
+const DEFAULT_MODEL = "google/gemini-2.5-pro-exp-03-25:free";
 let chatLogOptionalColumnsPromise: Promise<Set<string>> | null = null;
 
 function normalizeText(text: string): string {
@@ -184,6 +266,30 @@ function isPaysoRelated(
   return retrievalResult.items.length > 0 && retrievalResult.confidence !== "Low";
 }
 
+function hasSpecificSupportTerm(message: string): boolean {
+  return matchesAny(message, SPECIFIC_SUPPORT_TERMS);
+}
+
+function isVagueSupportIntent(message: string, retrievalResult: RetrievalResult): boolean {
+  const normalized = normalizeText(message);
+  const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+  const shortQuestion = normalized.length <= 32 || wordCount <= 5;
+  const hasVagueTerm = VAGUE_SUPPORT_TERMS.some((term) => {
+    const normalizedTerm = normalizeText(term);
+    return normalized === normalizedTerm || normalized.includes(normalizedTerm);
+  });
+
+  if (!hasVagueTerm) {
+    return false;
+  }
+
+  if (hasSpecificSupportTerm(normalized) && retrievalResult.confidence !== "Low") {
+    return false;
+  }
+
+  return shortQuestion || retrievalResult.items.length === 0 || retrievalResult.confidence === "Low";
+}
+
 function getSourceTitle(sourceUrl: string, fallbackTitle: string): string {
   return SOURCE_TITLES[sourceUrl] ?? fallbackTitle;
 }
@@ -207,17 +313,218 @@ function buildSources(items: RetrievalResult["items"]): SourceReference[] {
 }
 
 function buildKnowledgeFallback(language: "th" | "en", retrievalResult: RetrievalResult): string {
-  const snippets = retrievalResult.items
-    .map((item) => item.content.trim())
-    .filter(Boolean)
-    .filter((content, index, all) => all.indexOf(content) === index)
-    .slice(0, 2);
+  return language === "th"
+    ? "ขออภัยครับ ขณะนี้ระบบยังไม่พบข้อมูลทางการที่เพียงพอสำหรับตอบคำถามนี้อย่างมั่นใจ แนะนำให้ติดต่อทีมงาน Payso เพื่อยืนยันรายละเอียดเพิ่มเติม"
+    : "Sorry, the system has not found enough official information to answer this confidently. Please contact Payso support for confirmation.";
+}
 
-  if (snippets.length === 0) {
-    return language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN;
+function buildClarificationAnswer(language: "th" | "en"): string {
+  if (language === "th") {
+    return [
+      "ยินดีครับ ต้องการสอบถามเกี่ยวกับส่วนไหนของ Payso ครับ",
+      "",
+      "- สมัครใช้งาน Payso",
+      "- วิธีรับชำระเงิน",
+      "- Payment Link",
+      "- การเชื่อมต่อ API",
+      "- ค่าธรรมเนียม",
+      "- การถอนเงิน",
+      "- ปัญหาการใช้งาน",
+      "",
+      "สามารถพิมพ์รายละเอียดเพิ่มเติมได้เลยครับ",
+    ].join("\n");
   }
 
-  return snippets.join("\n\n");
+  return [
+    "Sure. Which part of Payso would you like to ask about?",
+    "",
+    "- Payso registration",
+    "- Receiving payments",
+    "- Payment Link",
+    "- API integration",
+    "- Fees",
+    "- Withdrawals",
+    "- Usage issues",
+    "",
+    "Please share a bit more detail and I’ll help from there.",
+  ].join("\n");
+}
+
+function buildRetrievedPromptContext(items: RetrievalResult["items"]): PromptContextItem[] {
+  return sanitizeRetrievedContext(
+    items.map((item) => ({
+      title: getSourceTitle(item.sourceUrl, item.title),
+      content: item.content,
+      sourceUrl: item.sourceUrl,
+    })),
+  );
+}
+
+function buildRawPromptContext(items: RetrievalResult["items"]): PromptContextItem[] {
+  return items.map((item) => ({
+    title: getSourceTitle(item.sourceUrl, item.title),
+    content: item.content,
+    sourceUrl: item.sourceUrl,
+  }));
+}
+
+function stripAnswerNoise(answer: string): string {
+  return answer
+    .replace(/\[\d+\]/g, "")
+    .replace(/\(\s*\d+(?:\s*,\s*\d+)*\s*\)/g, "")
+    .replace(/skip to main content/gi, "")
+    .replace(/powered by react/gi, "")
+    .replace(/\s+\|\s+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+function answerLooksNoisy(answer: string): boolean {
+  const normalized = normalizeText(answer);
+
+  return (
+    normalized.includes("skip to main content") ||
+    normalized.includes("powered by react") ||
+    normalized.includes("navigation") ||
+    normalized.includes("menu") ||
+    normalized.includes("pay solutions - online payment service")
+  );
+}
+
+function isApiQuestion(message: string, intent: string): boolean {
+  const normalized = normalizeText(message);
+  return intent === "Integration" || normalized.includes("api") || normalized.includes("webhook");
+}
+
+function pickRelevantLinks(params: {
+  promptContext: PromptContextItem[];
+  apiQuestion: boolean;
+  handover: boolean;
+  weakContext: boolean;
+}): SourceReference[] {
+  const uniqueLinks = new Map<string, SourceReference>();
+
+  for (const item of params.promptContext) {
+    if (!uniqueLinks.has(item.sourceUrl)) {
+      uniqueLinks.set(item.sourceUrl, {
+        title: getSourceTitle(item.sourceUrl, item.title),
+        url: item.sourceUrl,
+      });
+    }
+  }
+
+  const allLinks = Array.from(uniqueLinks.values());
+  const picks: SourceReference[] = [];
+
+  if (params.apiQuestion) {
+    const apiDocLink =
+      allLinks.find((link) => /api|docs|developer/i.test(link.url) || /api|docs|developer/i.test(link.title)) ??
+      null;
+
+    if (apiDocLink) {
+      picks.push(apiDocLink);
+    }
+  }
+
+  const contactLink =
+    allLinks.find((link) => /contact/i.test(link.url) || /contact/i.test(link.title)) ?? CONTACT_PAYSO_LINK;
+
+  if ((params.handover || params.weakContext || params.apiQuestion) && !picks.some((link) => link.url === contactLink.url)) {
+    picks.push(contactLink);
+  }
+
+  for (const link of allLinks) {
+    if (picks.length >= 2) {
+      break;
+    }
+
+    if (!picks.some((pick) => pick.url === link.url)) {
+      picks.push(link);
+    }
+  }
+
+  return picks.slice(0, 2);
+}
+
+function buildAdditionalSection(links: SourceReference[]): string {
+  if (links.length === 0) {
+    return "";
+  }
+
+  return `ดูเพิ่มเติม:\n${links.map((link) => `- ${link.title}: ${link.url}`).join("\n")}`;
+}
+
+function buildRelatedQuestionSection(questions: string[]): string {
+  const normalizedQuestions = questions.slice(0, 3);
+  return `คำถามที่เกี่ยวข้อง:\n${normalizedQuestions.map((question, index) => `${index + 1}. ${question}`).join("\n")}`;
+}
+
+function buildWeakOfficialInfoAnswer(params: {
+  language: "th" | "en";
+  links: SourceReference[];
+  relatedQuestions: string[];
+}): string {
+  if (params.language === "th") {
+    const sections = [
+      "ยินดีครับ ข้อมูลที่พบตอนนี้ยังไม่พอให้ตอบแบบเฉพาะเจาะจงได้ รบกวนเลือกหัวข้อหรือพิมพ์รายละเอียดเพิ่มอีกนิดครับ",
+      [
+        "- สมัครใช้งาน Payso",
+        "- วิธีรับชำระเงิน",
+        "- Payment Link",
+        "- การเชื่อมต่อ API",
+        "- ค่าธรรมเนียม",
+        "- การถอนเงิน",
+        "- ปัญหาการใช้งาน",
+      ].join("\n"),
+      buildRelatedQuestionSection(params.relatedQuestions),
+    ].filter(Boolean);
+
+    return sections.join("\n\n");
+  }
+
+  const sections = [
+    "Sure. I need a little more detail to answer this well. Which Payso topic should I help with?",
+    ["- Payso registration", "- Receiving payments", "- Payment Link", "- API integration", "- Fees", "- Withdrawals", "- Usage issues"].join("\n"),
+    buildRelatedQuestionSection(params.relatedQuestions),
+  ].filter(Boolean);
+
+  return sections.join("\n\n");
+}
+
+function buildApiSupportAnswer(params: {
+  links: SourceReference[];
+  relatedQuestions: string[];
+}): string {
+  const sections = [
+    "ได้ครับ Payso รองรับการเชื่อมต่อผ่าน API สำหรับธุรกิจที่ต้องการเชื่อมระบบชำระเงินเข้ากับเว็บไซต์ แอป หรือระบบหลังบ้านของตัวเอง",
+    [
+      "- เหมาะกับระบบที่ต้องการรับชำระเงินอัตโนมัติ",
+      "- ใช้เชื่อมกับ e-Payment, Payment Link หรือระบบหลังบ้านได้ตามรูปแบบบริการ",
+      "- นักพัฒนาควรดูเอกสาร API หรือคู่มือสำหรับนักพัฒนาก่อนเริ่มเชื่อมต่อ",
+    ].join("\n"),
+    buildRelatedQuestionSection(params.relatedQuestions),
+  ].filter(Boolean);
+
+  return sections.join("\n\n");
+}
+
+function formatPaysoAnswer(params: {
+  answer: string;
+  language: "th" | "en";
+  links: SourceReference[];
+  relatedQuestions: string[];
+}): string {
+  const cleanedAnswer = stripAnswerNoise(params.answer)
+    .replace(/ดูเพิ่มเติม:[\s\S]*$/u, "")
+    .replace(/คำถามที่เกี่ยวข้อง:[\s\S]*$/u, "")
+    .trim();
+  const sections = [
+    cleanedAnswer,
+    buildRelatedQuestionSection(params.relatedQuestions),
+  ].filter(Boolean);
+
+  return sections.join("\n\n");
 }
 
 function buildPaymentIssueAnswer(language: "th" | "en"): string {
@@ -301,7 +608,12 @@ function buildHandoverAnswer(language: "th" | "en"): string {
 }
 
 function needsContactLink(message: string, intent: string, handover: boolean): boolean {
-  if (handover || intent === "Human Handover") {
+  if (
+    handover ||
+    intent === "Human Handover" ||
+    intent === "Payment Issue" ||
+    intent === "Technical Issue"
+  ) {
     return true;
   }
 
@@ -341,7 +653,7 @@ function buildRelatedLink(params: {
     return [PAYSO_WEBSITE_LINK];
   }
 
-  return [];
+  return [PAYSO_WEBSITE_LINK];
 }
 
 function buildGreetingAnswer(language: "th" | "en"): string {
@@ -405,8 +717,8 @@ async function generateGeneralAnswer(
             role: "system",
             content:
               language === "th"
-                ? "คุณคือผู้ช่วย AI ที่ตอบสั้น ชัด และเป็นธรรมชาติ ภาษาไทยล้วน หากคำถามไม่เกี่ยวกับ Payso ให้ตอบเหมือนผู้ช่วยทั่วไปได้ แต่กระชับและสุภาพ"
-                : "You are a concise, natural AI assistant. If the question is not about Payso, answer it like a normal general assistant in a short and friendly way.",
+                ? "คุณเป็นเจ้าหน้าที่ customer support ของ Payso ตอบเป็นภาษาไทยก่อน น้ำเสียงสุภาพ กระชับ และเป็นมืออาชีพ ไม่พูดถึง AI หรือขั้นตอนภายใน หากข้อมูลยังไม่พอ ให้ถามคำถามต่อสั้น ๆ เพียง 1 ข้อเพื่อช่วยแก้ปัญหาให้ตรงจุด"
+                : "You are a professional Payso customer support agent. Reply concisely, politely, and in a customer support tone. Do not mention AI or internal workflow. If you are unsure, ask one short follow-up question."
           },
           { role: "user", content: question },
         ],
@@ -432,8 +744,68 @@ async function generateGeneralAnswer(
 
 function buildGenericFallback(language: "th" | "en"): string {
   return language === "th"
-    ? "ผมตอบคำถามทั่วไปได้ครับ และถ้าต้องการข้อมูลเกี่ยวกับ Payso ผมช่วยต่อได้ทั้งเรื่องบริการ การเชื่อมต่อ API และการเริ่มต้นใช้งาน"
-    : "I can help with general questions, and I can also help with Payso products, API integration, and onboarding.";
+    ? buildClarificationAnswer("th")
+    : buildClarificationAnswer("en");
+}
+
+async function generateGeneralAnswerLegacy(
+  question: string,
+  language: "th" | "en",
+): Promise<string | null> {
+  const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+
+  if (!apiKey) {
+    return null;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 9000);
+
+  try {
+    const response = await fetch(OPENROUTER_ENDPOINT, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "Payso Smart CS Agent",
+      },
+      body: JSON.stringify({
+        model: process.env.OPENROUTER_MODEL?.trim() || DEFAULT_MODEL,
+        temperature: 0.3,
+        max_tokens: 180,
+        messages: [
+          {
+            role: "system",
+            content:
+              language === "th"
+                ? "คุณคือผู้ช่วย AI ที่ตอบสั้น ชัด และเป็นธรรมชาติ ภาษาไทยล้วน หากคำถามไม่เกี่ยวกับ Payso ให้ตอบเหมือนผู้ช่วยทั่วไปได้ แต่กระชับและสุภาพ"
+                : "You are a concise, natural AI assistant. If the question is not about Payso, answer it like a normal general assistant in a short and friendly way.",
+          },
+          { role: "user", content: question },
+        ],
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const payload = (await response.json()) as {
+      choices?: Array<{ message?: { content?: string } }>;
+    };
+
+    return payload.choices?.[0]?.message?.content?.trim() ?? null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function buildGenericFallbackObsolete(language: "th" | "en"): string {
+  return buildGenericFallback(language);
 }
 
 function buildNotebookLmPrompt(params: {
@@ -483,12 +855,70 @@ async function getChatLogOptionalColumns(): Promise<Set<string>> {
 }
 
 function buildSuggestions(params: {
+  message: string;
   language: "th" | "en";
   answerType: "greeting" | "smalltalk" | "payso" | "handover" | "general";
+  intent?: string;
   retrievalResult?: RetrievalResult;
 }): string[] {
-  const { language, answerType, retrievalResult } = params;
+  const { message, language, answerType, intent, retrievalResult } = params;
   const defaults = [...DEFAULT_SUGGESTIONS[language]];
+  const normalizedMessage = normalizeText(message);
+
+  if (
+    intent === "Payment Issue" ||
+    intent === "Technical Issue" ||
+    normalizedMessage.includes("จ่ายไม่ได้") ||
+    normalizedMessage.includes("ชำระไม่ได้") ||
+    normalizedMessage.includes("ชำระเงินไม่ผ่าน") ||
+    normalizedMessage.includes("จ่ายเงินไม่ได้") ||
+    normalizedMessage.includes("payment failed") ||
+    normalizedMessage.includes("payment error")
+  ) {
+    return [
+      "ชำระผ่านช่องทางไหนได้บ้าง",
+      "ต้องส่งข้อมูลอะไรให้เจ้าหน้าที่ตรวจสอบ",
+      "เงินจะเข้าบัญชีเมื่อไหร่",
+    ];
+  }
+
+  if (
+    intent === "Human Handover" ||
+    normalizedMessage.includes("คืนเงิน") ||
+    normalizedMessage.includes("refund") ||
+    normalizedMessage.includes("chargeback")
+  ) {
+    return [
+      "ต้องส่งข้อมูลอะไรให้เจ้าหน้าที่ตรวจสอบ",
+      "ติดต่อเจ้าหน้าที่ได้ช่องทางไหน",
+      "ใช้เวลาตรวจสอบประมาณกี่วัน",
+    ];
+  }
+
+  if (
+    normalizedMessage.includes("สมัคร") ||
+    normalizedMessage.includes("ลงทะเบียน") ||
+    normalizedMessage.includes("sign up") ||
+    normalizedMessage.includes("register")
+  ) {
+    return [
+      "สมัคร Payso ต้องใช้อะไรบ้าง",
+      "เริ่มใช้งาน Payso ยังไง",
+      "ติดต่อทีมงานเพื่อลงทะเบียนได้ไหม",
+    ];
+  }
+
+  if (
+    intent === "Integration" ||
+    normalizedMessage.includes("api") ||
+    normalizedMessage.includes("webhook")
+  ) {
+    return [
+      "Payso มี API อะไรบ้าง",
+      "Webhook ของ Payso ใช้งานยังไง",
+      "ต้องเริ่มเชื่อมต่อระบบจากตรงไหน",
+    ];
+  }
 
   if (answerType === "handover") {
     return language === "th"
@@ -630,10 +1060,24 @@ export async function POST(request: Request) {
 
     const intentResult = classifyIntent(message);
     const retrievalResult = await retrieveKnowledge(message);
-    const paysoRelated = isPaysoRelated(message, retrievalResult, intentResult.intent);
+    const promptContext = buildRetrievedPromptContext(retrievalResult.items);
+    const llmContext = promptContext.length > 0 ? promptContext : buildRawPromptContext(retrievalResult.items);
+    const vagueSupport = isVagueSupportIntent(message, retrievalResult);
+    const paysoRelated = vagueSupport || isPaysoRelated(message, retrievalResult, intentResult.intent);
     const normalizedQuestion = normalizeQuestionForCache(message);
     const questionHash = createQuestionHash(normalizedQuestion);
-    const canUseAnswerCache = paysoRelated && !isPrivateOrUserSpecificQuestion(message);
+    const canUseAnswerCache = paysoRelated && !vagueSupport && !isPrivateOrUserSpecificQuestion(message);
+    const apiQuestion = isApiQuestion(message, intentResult.intent);
+
+    console.log("[Payso RAG] retrieval", {
+      items: retrievalResult.items.length,
+      confidence: retrievalResult.confidence,
+      score: retrievalResult.score,
+      promptContextItems: promptContext.length,
+      llmContextItems: llmContext.length,
+      paysoRelated,
+      intent: intentResult.intent,
+    });
 
     await saveQuestionEnrichmentCandidate({
       originalQuestion: message,
@@ -662,6 +1106,7 @@ export async function POST(request: Request) {
         kind: "message",
         conversationId,
         userMessage: message,
+        aiAnswer: null,
         intent: "Admin Takeover",
         confidence: "High",
         handover: true,
@@ -696,38 +1141,42 @@ export async function POST(request: Request) {
     let reason = "";
     let suggestions: string[] = [];
     let sources: SourceReference[] = [];
+    let answerLinks: SourceReference[] = [];
 
     if (isSmallTalk(message)) {
+      console.log("[Payso RAG] branch", "smalltalk");
       answer = buildSmallTalkAnswer(message, language);
       intent = "Greeting";
       confidence = "High";
       reason = "Handled as a lightweight conversational message.";
-      suggestions = buildSuggestions({ language, answerType: isGreeting(message) ? "greeting" : "smalltalk" });
-    } else if (intentResult.intent === "Payment Issue") {
-      answer = buildPaymentIssueAnswer(language);
-      intent = "Payment Issue";
-      confidence = "High";
-      reason = "Handled as a payment issue with a concise troubleshooting reply.";
-      suggestions = buildSuggestions({ language, answerType: "handover" });
-    } else if (intentResult.intent === "Technical Issue" && retrievalResult.items.length === 0) {
-      answer = buildTechnicalIssueAnswer(language);
-      intent = "Technical Issue";
-      confidence = "High";
-      reason = "Handled as a technical issue with a concise troubleshooting reply.";
-      suggestions = buildSuggestions({ language, answerType: "handover" });
+      suggestions = buildSuggestions({
+        message,
+        language,
+        answerType: isGreeting(message) ? "greeting" : "smalltalk",
+        intent,
+      });
     } else if (intentResult.intent === "Human Handover") {
+      console.log("[Payso RAG] branch", "human_handover");
       answer = buildHandoverAnswer(language);
       intent = "Human Handover";
       confidence = "High";
       handover = true;
       reason = "Handled as a case that needs staff review.";
-      suggestions = buildSuggestions({ language, answerType: "handover" });
+      suggestions = buildSuggestions({ message, language, answerType: "handover", intent });
+    } else if (vagueSupport) {
+      console.log("[Payso RAG] branch", "vague_support_clarification");
+      answer = buildClarificationAnswer(language);
+      intent = "Product Info";
+      confidence = "Medium";
+      reason = "Asked a clarification question because the user message was broad or retrieval confidence was low.";
+      suggestions = [...CLARIFICATION_SUGGESTIONS[language]];
     } else if (!paysoRelated) {
+      console.log("[Payso RAG] branch", "general_non_payso");
       answer = (await generateGeneralAnswer(message, language)) ?? buildGenericFallback(language);
       intent = "General";
       confidence = "Medium";
       reason = "Answered as a general AI request because the question was not clearly about Payso.";
-      suggestions = buildSuggestions({ language, answerType: "general" });
+      suggestions = buildSuggestions({ message, language, answerType: "general", intent });
     } else {
       const preGuardrail = preAnswerGuardrail({
         question: message,
@@ -736,17 +1185,29 @@ export async function POST(request: Request) {
         retrievalResult,
       });
 
+      console.log("[Payso RAG] preGuardrail", {
+        blocked: preGuardrail.blocked,
+        reason: preGuardrail.reason,
+        handover: preGuardrail.handover,
+      });
+
       if (preGuardrail.blocked) {
+        console.log("[Payso RAG] branch", "pre_guardrail_blocked");
         answer = preGuardrail.answer ?? (language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN);
         handover = preGuardrail.handover;
         reason = preGuardrail.reason;
-        confidence = retrievalResult.items.length > 0 ? retrievalResult.confidence : "Low";
-        sources = buildSources(retrievalResult.items);
-        suggestions = buildSuggestions({ language, answerType: handover ? "handover" : "payso", retrievalResult });
+        confidence = promptContext.length > 0 ? retrievalResult.confidence : "Low";
+        suggestions = buildSuggestions({
+          message,
+          language,
+          answerType: handover ? "handover" : "payso",
+          intent,
+          retrievalResult,
+        });
       } else {
         const cachedAnswer = canUseAnswerCache ? await getCachedAnswerByHash(questionHash) : null;
 
-        if (cachedAnswer) {
+        if (cachedAnswer && !answerLooksNoisy(cachedAnswer.answer)) {
           answer = cachedAnswer.answer;
           reason = "Answered from cached Payso response.";
 
@@ -755,21 +1216,29 @@ export async function POST(request: Request) {
             hitCount: cachedAnswer.hit_count ?? 0,
           });
         } else {
-        const llmAnswer =
-          retrievalResult.items.length > 0
+          const hasRetrievedItems = retrievalResult.items.length > 0;
+          const shouldUseCsLlm =
+            hasRetrievedItems ||
+            intentResult.intent === "Payment Issue" ||
+            intentResult.intent === "Technical Issue";
+
+          console.log("[Payso RAG] retrieval item count", retrievalResult.items.length);
+          console.log("[Payso RAG] branch selected", hasRetrievedItems ? "llm_with_retrieved_context" : "fallback_no_retrieval");
+
+          const llmAnswer = shouldUseCsLlm
             ? await generateLLMAnswer({
                 question: message,
-                context: retrievalResult.items.map((item) => ({
-                  title: getSourceTitle(item.sourceUrl, item.title),
-                  content: item.content,
-                  sourceUrl: item.sourceUrl,
-                })),
+                context: llmContext,
                 intent: intentResult.intent,
                 language,
               })
             : null;
 
-          answer = llmAnswer ?? buildKnowledgeFallback(language, retrievalResult);
+          if (hasRetrievedItems) {
+            answer = llmAnswer ?? buildGenericFallback(language);
+          } else {
+            answer = llmAnswer ?? buildKnowledgeFallback(language, retrievalResult);
+          }
         }
 
         const finalGuardrail = validateFinalAnswer({
@@ -781,29 +1250,73 @@ export async function POST(request: Request) {
         });
 
         if (finalGuardrail.blocked) {
+          console.log("[Payso RAG] finalGuardrail", {
+            blocked: true,
+            reason: finalGuardrail.reason,
+            handover: finalGuardrail.handover,
+          });
           answer = finalGuardrail.answer ?? answer;
           handover = finalGuardrail.handover;
           reason = finalGuardrail.reason;
         } else {
+          console.log("[Payso RAG] finalGuardrail", {
+            blocked: false,
+            reason: finalGuardrail.reason,
+          });
           handover = intentResult.handoverRequired;
           reason =
             reason ||
-            (retrievalResult.items.length > 0
+            (promptContext.length > 0
               ? "Answered from retrieved Payso knowledge."
               : "Answered conservatively because only limited verified Payso context was available.");
         }
-
-        sources = buildSources(retrievalResult.items);
-        suggestions = buildSuggestions({ language, answerType: handover ? "handover" : "payso", retrievalResult });
+        suggestions = buildSuggestions({
+          message,
+          language,
+          answerType: handover ? "handover" : "payso",
+          intent,
+          retrievalResult,
+        });
       }
     }
 
-    sources = buildRelatedLink({
-      message,
-      intent,
+    suggestions = suggestions.slice(0, 3);
+
+    const generatedAnswerIsNoisy = paysoRelated && answerLooksNoisy(answer);
+
+    const weakOfficialContext =
+      paysoRelated &&
+      (retrievalResult.items.length === 0 || generatedAnswerIsNoisy);
+
+    answerLinks = pickRelevantLinks({
+      promptContext: llmContext,
+      apiQuestion,
       handover,
-      paysoRelated,
+      weakContext: weakOfficialContext,
     });
+
+    if (paysoRelated && !vagueSupport) {
+      if (weakOfficialContext) {
+        answer = buildWeakOfficialInfoAnswer({
+          language,
+          links: answerLinks,
+          relatedQuestions: suggestions,
+        });
+      } else {
+        answer = formatPaysoAnswer({
+          answer,
+          language,
+          links: answerLinks,
+          relatedQuestions: suggestions,
+        });
+      }
+    }
+
+    sources = paysoRelated && !vagueSupport
+      ? answerLinks.length
+        ? answerLinks
+        : buildSources(retrievalResult.items)
+      : [];
 
     const assistantMessageId = conversationId
       ? await saveChatMessage({
@@ -822,6 +1335,7 @@ export async function POST(request: Request) {
       kind: "message",
       conversationId,
       userMessage: message,
+      aiAnswer: answer,
       intent,
       confidence,
       handover,
@@ -861,16 +1375,6 @@ export async function POST(request: Request) {
             : confidence === "Low"
               ? "high"
               : "normal",
-      });
-
-      await sendTelegramNotification({
-        kind: "handover",
-        conversationId,
-        userMessage: message,
-        intent,
-        confidence,
-        handover,
-        userInfo: body.userInfo,
       });
     }
 

@@ -86,6 +86,16 @@ function hasVerifiedPricingSource(retrievalResult: RetrievalResult): boolean {
   });
 }
 
+function hasSpecificPricingClaim(text: string): boolean {
+  const normalizedText = normalizeText(text);
+
+  return (
+    /\d[\d,.]*\s*(บาท|%|เปอร์เซ็นต์|percent|เปอร์เซนต์)/iu.test(normalizedText) ||
+    /(ฟรี|free|ไม่เสียค่าใช้จ่าย)/iu.test(normalizedText) ||
+    hasTerm(normalizedText, DISCOUNT_TERMS)
+  );
+}
+
 export function preAnswerGuardrail(params: GuardrailParams): GuardrailResult {
   const { question, language, intentResult, retrievalResult } = params;
   const safeFallback = language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN;
@@ -123,7 +133,7 @@ export function preAnswerGuardrail(params: GuardrailParams): GuardrailResult {
     };
   }
 
-  if (asksDiscount) {
+  if (asksDiscount && !verifiedPricing) {
     return {
       blocked: true,
       answer: safeFallback,
@@ -150,10 +160,14 @@ export function preAnswerGuardrail(params: GuardrailParams): GuardrailResult {
 }
 
 export function validateFinalAnswer(params: GuardrailParams & { answer: string }): GuardrailResult {
-  const { answer, language, retrievalResult } = params;
+  const { answer, language, question, retrievalResult } = params;
   const normalizedAnswer = normalizeText(answer);
+  const normalizedQuestion = normalizeText(question);
   const safeFallback = language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN;
   const verifiedPricing = hasVerifiedPricingSource(retrievalResult);
+  const asksPricing = hasTerm(normalizedQuestion, PRICING_TERMS);
+  const answerHasPricingTerm = hasTerm(normalizedAnswer, PRICING_TERMS);
+  const answerHasSpecificPricingClaim = hasSpecificPricingClaim(normalizedAnswer);
 
   if (retrievalResult.items.length === 0) {
     return {
@@ -173,7 +187,7 @@ export function validateFinalAnswer(params: GuardrailParams & { answer: string }
     };
   }
 
-  if (hasTerm(normalizedAnswer, PRICING_TERMS) && !verifiedPricing) {
+  if ((asksPricing || answerHasSpecificPricingClaim) && answerHasPricingTerm && !verifiedPricing) {
     return {
       blocked: true,
       answer: safeFallback,
