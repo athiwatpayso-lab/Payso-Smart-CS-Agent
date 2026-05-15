@@ -27,45 +27,21 @@ export const HANDOVER_MESSAGE_TH =
 export const HANDOVER_MESSAGE_EN =
   "This case involves transaction-specific details or staff review. For accuracy, please contact the Payso team directly and prepare the transaction number, order number, or payment proof for verification.";
 
-const PRICING_TERMS = [
-  "ราคา",
-  "ค่าธรรมเนียม",
-  "ค่าบริการ",
-  "ดอกเบี้ย",
-  "ส่วนลด",
-  "โปรโมชั่น",
-  "promotion",
-  "discount",
-  "pricing",
-  "price",
-  "fee",
-  "fees",
-  "sla",
+const UNSAFE_TERMS = [
+  "ignore previous instructions",
+  "reveal your instructions",
+  "system prompt",
+  "developer message",
+  "show me your api key",
+  "share your secret key",
+  "steal api key",
+  "hack into",
+  "bypass authentication",
+  "jailbreak",
+  "steal customer data",
+  "phishing",
+  "malware",
 ];
-
-const DISCOUNT_TERMS = ["discount", "promotion", "promo", "ส่วนลด", "โปรโมชั่น", "โปร"];
-
-const TRANSACTION_TERMS = [
-  "ลูกค้าจ่ายแล้ว",
-  "ชำระเงินแล้ว",
-  "รายการไม่ขึ้น",
-  "paid transaction",
-  "transaction not found",
-  "refund",
-  "คืนเงิน",
-  "money missing",
-  "เงินหาย",
-  "account",
-  "บัญชี",
-  "slip",
-  "สลิป",
-];
-
-const OUT_OF_SCOPE_REDIRECT_TH =
-  "ระบบนี้ออกแบบมาเพื่อช่วยตอบคำถามเกี่ยวกับผลิตภัณฑ์ การใช้งาน การเชื่อมต่อ และการสนับสนุนของ Payso หากต้องการสอบถามเรื่องอื่น ลองถามในมุมที่เกี่ยวกับบริการของ Payso ได้เลย";
-
-const OUT_OF_SCOPE_REDIRECT_EN =
-  "This assistant is designed for Payso product, usage, integration, and support questions. If you need help, please ask a question related to Payso services.";
 
 function normalizeText(text: string): string {
   return text.toLowerCase().replace(/\s+/g, " ").trim();
@@ -76,69 +52,17 @@ function hasTerm(text: string, terms: string[]): boolean {
   return terms.some((term) => normalizedText.includes(normalizeText(term)));
 }
 
-function hasVerifiedPricingSource(retrievalResult: RetrievalResult): boolean {
-  return retrievalResult.items.some((item) => {
-    const combined = normalizeText(
-      [item.category, item.title, item.content, item.keywords.join(" ")].join(" "),
-    );
-
-    return item.category === "Pricing Sensitive" || PRICING_TERMS.some((term) => combined.includes(normalizeText(term)));
-  });
-}
-
-function hasSpecificPricingClaim(text: string): boolean {
-  const normalizedText = normalizeText(text);
-
-  return (
-    /\d[\d,.]*\s*(บาท|%|เปอร์เซ็นต์|percent|เปอร์เซนต์)/iu.test(normalizedText) ||
-    /(ฟรี|free|ไม่เสียค่าใช้จ่าย)/iu.test(normalizedText) ||
-    hasTerm(normalizedText, DISCOUNT_TERMS)
-  );
-}
-
 export function preAnswerGuardrail(params: GuardrailParams): GuardrailResult {
-  const { question, language, intentResult, retrievalResult } = params;
+  const { question, language, retrievalResult } = params;
   const safeFallback = language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN;
-  const handoverMessage = language === "th" ? HANDOVER_MESSAGE_TH : HANDOVER_MESSAGE_EN;
   const normalizedQuestion = normalizeText(question);
-  const asksPricing = hasTerm(normalizedQuestion, PRICING_TERMS);
-  const asksDiscount = hasTerm(normalizedQuestion, DISCOUNT_TERMS);
-  const realTransactionCase = hasTerm(normalizedQuestion, TRANSACTION_TERMS);
-  const verifiedPricing = hasVerifiedPricingSource(retrievalResult);
 
-  if (intentResult.intent === "Out of Scope") {
+  if (hasTerm(normalizedQuestion, UNSAFE_TERMS)) {
     return {
       blocked: true,
-      answer: language === "th" ? OUT_OF_SCOPE_REDIRECT_TH : OUT_OF_SCOPE_REDIRECT_EN,
+      answer: safeFallback,
       handover: false,
-      reason: intentResult.reason,
-    };
-  }
-
-  if (intentResult.intent === "Human Handover" || intentResult.handoverRequired || realTransactionCase) {
-    return {
-      blocked: true,
-      answer: handoverMessage,
-      handover: true,
-      reason: "The question involves a real transaction, merchant-specific issue, or staff-level verification.",
-    };
-  }
-
-  if ((asksPricing || intentResult.intent === "Pricing Sensitive") && !verifiedPricing) {
-    return {
-      blocked: true,
-      answer: safeFallback,
-      handover: true,
-      reason: "Pricing-sensitive request without a verified official pricing source.",
-    };
-  }
-
-  if (asksDiscount && !verifiedPricing) {
-    return {
-      blocked: true,
-      answer: safeFallback,
-      handover: true,
-      reason: "Discount or promotion requests must not be answered without an explicit official source.",
+      reason: "Explicit unsafe content was blocked before answering.",
     };
   }
 
@@ -160,14 +84,9 @@ export function preAnswerGuardrail(params: GuardrailParams): GuardrailResult {
 }
 
 export function validateFinalAnswer(params: GuardrailParams & { answer: string }): GuardrailResult {
-  const { answer, language, question, retrievalResult } = params;
+  const { answer, language, retrievalResult } = params;
   const normalizedAnswer = normalizeText(answer);
-  const normalizedQuestion = normalizeText(question);
   const safeFallback = language === "th" ? SAFE_FALLBACK_TH : SAFE_FALLBACK_EN;
-  const verifiedPricing = hasVerifiedPricingSource(retrievalResult);
-  const asksPricing = hasTerm(normalizedQuestion, PRICING_TERMS);
-  const answerHasPricingTerm = hasTerm(normalizedAnswer, PRICING_TERMS);
-  const answerHasSpecificPricingClaim = hasSpecificPricingClaim(normalizedAnswer);
 
   if (retrievalResult.items.length === 0) {
     return {
@@ -178,30 +97,12 @@ export function validateFinalAnswer(params: GuardrailParams & { answer: string }
     };
   }
 
-  if (hasTerm(normalizedAnswer, DISCOUNT_TERMS) && !verifiedPricing) {
+  if (hasTerm(normalizedAnswer, UNSAFE_TERMS)) {
     return {
       blocked: true,
       answer: safeFallback,
-      handover: true,
-      reason: "Final answer mentioned discount or promotion without verified support.",
-    };
-  }
-
-  if ((asksPricing || answerHasSpecificPricingClaim) && answerHasPricingTerm && !verifiedPricing) {
-    return {
-      blocked: true,
-      answer: safeFallback,
-      handover: true,
-      reason: "Final answer mentioned pricing-sensitive information without verified support.",
-    };
-  }
-
-  if (normalizedAnswer.includes("5%")) {
-    return {
-      blocked: true,
-      answer: safeFallback,
-      handover: true,
-      reason: "Final answer contained an unsupported discount claim.",
+      handover: false,
+      reason: "Final answer contained explicit unsafe content.",
     };
   }
 
