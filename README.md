@@ -490,8 +490,7 @@ Prototype นี้ถูกออกแบบให้สามารถต่�
 
 * LINE OA
 * Telegram Voice
-* CRM Integration
-* Voice Call Workflow
+* Google Chat
 
 ---
 
