@@ -489,7 +489,7 @@ Prototype นี้ถูกออกแบบให้สามารถต่�
 รองรับ:
 
 * LINE OA
-* Telegram Voice
+* Telegram
 * Google Chat
 
 ---
