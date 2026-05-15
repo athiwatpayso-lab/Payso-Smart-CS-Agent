@@ -1,4 +1,5 @@
 export type Intent =
+  | "Greeting"
   | "Product Info"
   | "Integration"
   | "Payment Issue"
