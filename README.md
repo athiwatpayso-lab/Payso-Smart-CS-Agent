@@ -1,40 +1,68 @@
-# Payso Smart CS Agent (PoC)
+# Payso Smart CS Agent (Prototype Demo)
 
 AI-driven Customer Success Agent สำหรับธุรกิจ Fintech
-Prototype สำหรับระบบ Customer Support อัตโนมัติของ Payso
+Prototype Demo สำหรับจำลองระบบ Customer Support อัตโนมัติของ Payso โดยอ้างอิงโจทย์จาก Payso Innovation Support Assessment 
 
 ---
 
-# Project Objective
+# Project Overview
 
-โปรเจคนี้ถูกพัฒนาขึ้นเพื่อจำลองระบบ AI Customer Success Agent สำหรับ Payso
-โดยมีเป้าหมายหลักคือ:
+โปรเจคนี้ถูกพัฒนาขึ้นเพื่อจำลองแนวทางการสร้าง AI Customer Success Agent สำหรับ Payso ที่สามารถช่วยตอบคำถามลูกค้าเกี่ยวกับผลิตภัณฑ์และการเชื่อมต่อระบบได้ตลอด 24 ชั่วโมง
 
-* ลดภาระงาน Customer Support ที่เป็นคำถามซ้ำ ๆ
-* ให้บริการลูกค้าได้ตลอด 24 ชั่วโมง
-* เพิ่มความเร็วในการตอบคำถามเกี่ยวกับผลิตภัณฑ์และการเชื่อมต่อระบบ
-* ควบคุมความถูกต้องของข้อมูลในระดับธุรกิจ Fintech
-* รองรับ Human Handover เมื่อ AI ไม่ควรตอบเอง
+Prototype นี้เน้นการแสดง:
 
-Prototype นี้ออกแบบตามโจทย์ในเอกสาร Payso Innovation Support Assessment 
+* AI Workflow Design
+* RAG-based Knowledge Retrieval
+* Human Handover
+* Voice Interaction Prototype
+* Fintech Accuracy Guardrails
+
+โดยเน้น “Architecture และ Workflow” มากกว่าการเป็น Production System เต็มรูปแบบ
 
 ---
 
-# Scope ของ Prototype
+# Current Prototype Scope
 
-ระบบสามารถตอบคำถามเกี่ยวกับผลิตภัณฑ์หลักของ Payso อย่างน้อย 3 ส่วน ได้แก่:
+Prototype ปัจจุบันรองรับ:
+
+## Web Chat Interface
+
+* AI Chat
+* Suggested Questions
+* Conversation History
+* Voice Typing (STT)
+* Voice Reply (TTS)
+
+## Telegram Integration
+
+* Telegram Notification
+* Admin Takeover
+* Human Handover
+* Real-time Reply Sync
+
+## AI Workflow
+
+* Intent Classification
+* RAG Retrieval
+* AI Response Generation
+* Accuracy Guardrails
+
+---
+
+# Core Products in Scope
+
+Prototype รองรับคำถามเกี่ยวกับผลิตภัณฑ์หลักของ Payso อย่างน้อย 3 ส่วน ได้แก่:
 
 * Payment Gateway
 * E-Link
 * Payment Integration / API
 
-รองรับ:
+อ้างอิงข้อมูลจาก:
 
-* Web Chat
-* Telegram Human Handover
-* RAG-based Knowledge Retrieval
-* AI Intent Classification
-* Voice Workflow Simulation (STT → LLM → TTS)
+* payso.co/th
+* FAQ
+* Product Information
+* Knowledge Chunks ภายในระบบ
 
 ---
 
@@ -62,75 +90,84 @@ Optional Human Handover (Telegram)
 
 ---
 
+# Tech Stack
+
+## Frontend
+
+* Next.js 14
+* React
+* Tailwind CSS
+* TypeScript
+
+## Backend
+
+* Next.js API Routes
+* Supabase
+* PostgreSQL
+
+## AI / LLM
+
+* OpenRouter
+* GPT-based Models
+
+## Infrastructure
+
+* Vercel
+* Telegram Bot API
+
+---
+
 # Part 1 — Knowledge Engineering & Logic
 
 ## RAG Architecture
 
-ระบบใช้ Retrieval-Augmented Generation (RAG) เพื่อให้ AI ตอบจากข้อมูลจริงบนเว็บไซต์ Payso แทนการ “คิดเอง”
+Prototype ใช้ Retrieval-Augmented Generation (RAG) เพื่อช่วยให้ AI ตอบจากข้อมูลจริงแทนการสร้างคำตอบขึ้นเอง
 
-## Workflow
+Workflow:
 
 1. ดึงข้อมูลจาก payso.co/th
-2. แปลงข้อมูลเป็น Knowledge Chunks
-3. สร้าง Embeddings
-4. เก็บลง Supabase Vector Database
-5. ค้นหาข้อมูลด้วย Semantic Search
+2. แบ่งข้อมูลเป็น Knowledge Chunks
+3. สร้าง Embedding
+4. จัดเก็บใน Supabase
+5. ค้นหาด้วย Semantic Search
 6. Inject Context เข้า Prompt ก่อนส่งเข้า LLM
 
-## จุดประสงค์
+แนวทางนี้ช่วย:
 
 * ลด Hallucination
 * เพิ่มความแม่นยำ
-* ควบคุมคำตอบในระดับ Fintech
-* รองรับการอัปเดตข้อมูลในอนาคต
+* ควบคุมข้อมูลในระดับธุรกิจ Fintech
 
 ---
 
 ## Accuracy Guardrails
 
-ระบบป้องกัน AI Hallucination ผ่านหลายชั้น:
+Prototype มี Guardrails เพื่อป้องกัน AI ตอบผิดหรือสร้างข้อมูลธุรกิจขึ้นเอง
 
-### 1. Grounded Context Only
+### Current Guardrails
 
-AI ตอบได้เฉพาะข้อมูลที่ค้นเจอจาก Knowledge Base
+* AI ตอบเฉพาะข้อมูลที่ค้นเจอจาก Context
+* ไม่สร้าง Promotion หรือ Discount เอง
+* ไม่สร้างข้อมูลค่าธรรมเนียมที่ไม่มีจริง
+* จำกัด Scope ของคำตอบ
 
-### 2. No Unsupported Claims
+หาก AI ไม่มั่นใจ:
 
-ห้าม AI สร้าง:
-
-* โปรโมชั่น
-* ส่วนลด
-* ค่าธรรมเนียม
-* Feature
-  ที่ไม่มีในเอกสารจริง
-
-### 3. Confidence Threshold
-
-หากคะแนนความมั่นใจต่ำ:
-
-* ไม่ตอบแบบมั่ว
-* Trigger Human Handover
-
-### 4. Prompt Constraints
-
-System Prompt บังคับว่า:
-
-* ห้ามเดาข้อมูล
-* ห้ามสร้าง Business Policy ใหม่
-* Prioritize Accuracy > Creativity
+* ตอบแบบ Conservative
+* หรือ Trigger Human Handover
 
 ---
 
 ## Intent Classification
 
-ระบบแบ่งประเภทคำถามก่อนส่งเข้า Workflow
+ระบบใช้ AI เพื่อแยกประเภทคำถามก่อนเข้าสู่ Workflow
 
 ### Product Information
 
 เช่น:
 
-* Payso มีบริการอะไร
-* E-Link คืออะไร
+* “Payso มีบริการอะไรบ้าง”
+* “E-Link คืออะไร”
 
 → ใช้ RAG Retrieval
 
@@ -138,19 +175,18 @@ System Prompt บังคับว่า:
 
 เช่น:
 
-* เชื่อม API ไม่ได้
-* Webhook ไม่ทำงาน
+* “Webhook ไม่ทำงาน”
+* “เชื่อม API ไม่ได้”
 
-→ Trigger Technical Support Flow
+→ Technical Support Flow
 
 ### Human Support
 
 เช่น:
 
-* ขอคุยกับเจ้าหน้าที่
-* ลูกค้าไม่พอใจ
+* “ขอคุยกับเจ้าหน้าที่”
 
-→ ส่งต่อ Human Handover
+→ Trigger Human Handover
 
 ---
 
@@ -158,39 +194,74 @@ System Prompt บังคับว่า:
 
 ## Omni-channel Journey
 
-Conversation State ถูกเก็บใน Supabase
+Conversation State ถูกจัดเก็บใน Supabase
 
-ทำให้สามารถ:
+ทำให้ระบบสามารถ:
 
 * เริ่มจาก Web Chat
 * ต่อไป Telegram
-* หรือ Voice Call
-  โดยยังคง Context เดิมได้
+* และรองรับการต่อยอด Voice Workflow ในอนาคต
+
+โดยยังคง Conversation Context เดิมไว้ได้
 
 ---
 
-## Voice Integration
+## Voice Integration (Current Demo)
 
-Voice Workflow:
+### Web Interface (app/page.tsx)
 
-Speech-to-Text (STT)
-↓
-Intent Detection
-↓
-RAG Retrieval
-↓
-LLM Response
-↓
-Text-to-Speech (TTS)
+Prototype รองรับ Voice Interaction ผ่าน Browser API
 
-### Latency Optimization
+### Speech-to-Text (STT)
 
-* Streaming Response
-* Lightweight Prompt
-* Cached Retrieval
-* Fast TTS Model
+ใช้:
 
-เพื่อให้เสียงตอบกลับดูเป็นธรรมชาติและไม่ Delay
+* `window.webkitSpeechRecognition`
+
+สำหรับ:
+
+* แปลงเสียงพูดเป็นข้อความ
+* รองรับภาษาไทยและอังกฤษ
+
+### Text-to-Speech (TTS)
+
+ใช้:
+
+* `window.speechSynthesis`
+
+สำหรับ:
+
+* อ่านข้อความตอบกลับจาก AI
+
+---
+
+## Current Limitations
+
+### Browser Dependency
+
+คุณภาพของ STT/TTS ขึ้นอยู่กับ Browser ของผู้ใช้
+
+เช่น:
+
+* Chrome รองรับดีที่สุด
+* Browser บางตัวอาจไม่รองรับเต็มรูปแบบ
+
+### Thai Voice Quality
+
+เสียงภาษาไทยจาก Browser TTS อาจยังไม่เป็นธรรมชาติเท่า Production-grade Voice AI
+
+### Telegram Voice Support
+
+ปัจจุบัน Telegram Bot (`app/api/telegram/route.ts`) รองรับเฉพาะ:
+
+* Text Message
+* Admin Reply
+* Human Handover
+
+ยังไม่รองรับ:
+
+* Voice Message
+* Real-time Voice Processing
 
 ---
 
@@ -198,43 +269,51 @@ Text-to-Speech (TTS)
 
 ระบบส่งต่อ Human Agent เมื่อ:
 
-* Confidence ต่ำ
+* AI Confidence ต่ำ
 * พบคำถามนอก Scope
-* User Frustration สูง
 * Technical Escalation
-* Payment-sensitive Request
+* Sensitive Business Questions
+* User ต้องการคุยกับเจ้าหน้าที่
 
-Telegram ใช้เป็น Admin Console สำหรับรับช่วงการสนทนา
+Workflow:
 
-เมื่อ Admin Takeover:
-
-* AI จะหยุดตอบ
-* Admin ตอบกลับผ่าน Telegram
-* Sync กลับ Web Chat แบบ Real-time
+1. ส่ง Notification เข้า Telegram
+2. Admin กดรับแชท
+3. AI หยุดตอบ
+4. Admin ตอบผ่าน Telegram
+5. Sync กลับ Web Chat แบบ Real-time
 
 ---
 
 # Part 3 — Brand Experience
 
-Prototype ถูกออกแบบให้สอดคล้องกับแนวทางของ Payso:
+Prototype ถูกออกแบบให้สอดคล้องกับแนวทางของ Payso ตามโจทย์ Assessment 
+
+## Current UI Direction
 
 * Minimal UI
-* Glassmorphism Style
 * Clean Fintech Layout
 * Thai-first UX
 * Professional Tone
 
-Typography:
+## Typography
+
+ปัจจุบันใช้:
 
 * Noto Sans Thai
-* Aktiv Grotesk Thai (Reference)
 
-AI Persona:
+และอ้างอิงแนวทาง:
 
-* Professional
-* Helpful
-* Clear
-* Non-salesy
+* Aktiv Grotesk Thai
+
+## Design Direction
+
+Prototype เริ่มออกแบบโดยอ้างอิง:
+
+* Glassmorphism Style
+* Modern Fintech UI
+
+แต่ยังไม่ใช่ Final Brand Production Design
 
 ---
 
@@ -274,21 +353,19 @@ AI Persona:
 
 ## กรณี AI เสนอส่วนลด 5% ที่ไม่มีจริง
 
-### ส่วนที่ผิดพลาด
-
-Failure เกิดที่:
+Failure หลักเกิดจาก:
 
 * Prompt Control
-* Business Rule Validation
-* Missing Guardrails
+* Missing Business Validation
+* Insufficient Guardrails
 
-AI พยายาม “ช่วยลูกค้า” มากเกินไป จนสร้างข้อมูลที่ไม่มีจริง
+AI พยายามช่วยลูกค้ามากเกินไปจนสร้างข้อมูลที่ไม่มีจริง
 
 ---
 
 ## วิธีแก้ไข
 
-### 1. Restrict Financial Claims
+### Restrict Financial Claims
 
 AI ห้ามสร้าง:
 
@@ -298,34 +375,35 @@ AI ห้ามสร้าง:
 
 หากไม่มีข้อมูลใน Knowledge Base
 
-### 2. Add Business Validation Layer
+### Add Business Validation Layer
 
-ตรวจสอบข้อความก่อนส่งออก
+เพิ่ม Validation ก่อนส่งข้อความออก
 
-### 3. Escalate Sensitive Topics
+### Human Escalation
 
 เรื่อง:
 
 * ราคา
 * ค่าธรรมเนียม
-* การเงิน
 * Refund
-  ให้ Human Review ได้
+* Sensitive Financial Topics
+
+ควรให้ Human Review ได้
 
 ---
 
 ## Balancing AI Autonomy vs Business Control
 
-แนวคิดหลักคือ:
+แนวคิดหลักของระบบคือ:
 
 AI มีอิสระในการ “อธิบาย”
 แต่ไม่มีอิสระในการ “สร้างนโยบายธุรกิจ”
 
-AI ควรช่วยเรื่อง:
+AI ควรช่วย:
 
 * Speed
 * Clarity
-* Conversation Flow
+* Customer Experience
 
 แต่ Business Rules ต้องถูกควบคุมโดยระบบเสมอ
 
@@ -347,17 +425,17 @@ AI ควรช่วยเรื่อง:
 
 AI ช่วย:
 
-* สร้าง Workflow
-* Refactor Code
 * Generate Prompt
+* Refactor Code
+* ออกแบบ Workflow
 * สรุป Knowledge Structure
-* Prototype Faster
+* เร่งการทำ Prototype
 
 ---
 
-## จุดที่ต้องแก้ไขด้วยตัวเอง
+## จุดที่ต้อง Manual Review
 
-ต้อง Manual Review ในเรื่อง:
+ต้องตรวจสอบด้วยตัวเองในเรื่อง:
 
 * Fintech Accuracy
 * Prompt Safety
@@ -369,7 +447,64 @@ AI ช่วย:
 
 * เดาข้อมูล
 * ตอบเกิน Scope
-* สร้าง Logic ทางธุรกิจผิดพลาด
+* สร้าง Business Logic ที่ผิดพลาด
+
+---
+
+# Future Roadmap
+
+Prototype นี้ถูกออกแบบให้สามารถต่อยอดเป็น Production AI Support Platform ได้ในอนาคต
+
+## Planned Improvements
+
+### Production-grade Voice AI
+
+วางแผนต่อยอดไปใช้:
+
+* OpenAI Realtime API
+* Deepgram
+* ElevenLabs
+
+เพื่อ:
+
+* ลด Latency
+* เพิ่มความแม่นยำภาษาไทย
+* ทำให้เสียงเป็นธรรมชาติมากขึ้น
+
+---
+
+### Advanced RAG Pipeline
+
+วางแผนเพิ่ม:
+
+* Better Chunking
+* Knowledge Versioning
+* Semantic Re-ranking
+* Cached Retrieval
+
+---
+
+### Multi-channel Support
+
+รองรับ:
+
+* LINE OA
+* Telegram Voice
+* CRM Integration
+* Voice Call Workflow
+
+---
+
+### AI Governance
+
+เพิ่มระบบ:
+
+* Financial Validation
+* Policy Enforcement
+* Confidence Scoring
+* AI Audit Logging
+
+เพื่อรองรับมาตรฐานระดับ Production Fintech
 
 ---
 
